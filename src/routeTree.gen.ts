@@ -12,6 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestShadcnRouteImport } from './routes/test-shadcn'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SpellsIndexRouteImport } from './routes/spells/index'
+import { Route as ProfileIndexRouteImport } from './routes/profile/index'
+import { Route as MonstersIndexRouteImport } from './routes/monsters/index'
+import { Route as FavoritesIndexRouteImport } from './routes/favorites/index'
+import { Route as AboutIndexRouteImport } from './routes/about/index'
 
 const TestShadcnRoute = TestShadcnRouteImport.update({
   id: '/test-shadcn',
@@ -28,35 +33,105 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpellsIndexRoute = SpellsIndexRouteImport.update({
+  id: '/spells/',
+  path: '/spells/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonstersIndexRoute = MonstersIndexRouteImport.update({
+  id: '/monsters/',
+  path: '/monsters/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesIndexRoute = FavoritesIndexRouteImport.update({
+  id: '/favorites/',
+  path: '/favorites/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutIndexRoute = AboutIndexRouteImport.update({
+  id: '/about/',
+  path: '/about/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-shadcn': typeof TestShadcnRoute
+  '/about': typeof AboutIndexRoute
+  '/favorites': typeof FavoritesIndexRoute
+  '/monsters': typeof MonstersIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/spells': typeof SpellsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-shadcn': typeof TestShadcnRoute
+  '/about': typeof AboutIndexRoute
+  '/favorites': typeof FavoritesIndexRoute
+  '/monsters': typeof MonstersIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/spells': typeof SpellsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-shadcn': typeof TestShadcnRoute
+  '/about/': typeof AboutIndexRoute
+  '/favorites/': typeof FavoritesIndexRoute
+  '/monsters/': typeof MonstersIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/spells/': typeof SpellsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/anotherPage' | '/test-shadcn'
+  fullPaths:
+    | '/'
+    | '/anotherPage'
+    | '/test-shadcn'
+    | '/about'
+    | '/favorites'
+    | '/monsters'
+    | '/profile'
+    | '/spells'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/anotherPage' | '/test-shadcn'
-  id: '__root__' | '/' | '/anotherPage' | '/test-shadcn'
+  to:
+    | '/'
+    | '/anotherPage'
+    | '/test-shadcn'
+    | '/about'
+    | '/favorites'
+    | '/monsters'
+    | '/profile'
+    | '/spells'
+  id:
+    | '__root__'
+    | '/'
+    | '/anotherPage'
+    | '/test-shadcn'
+    | '/about/'
+    | '/favorites/'
+    | '/monsters/'
+    | '/profile/'
+    | '/spells/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnotherPageRoute: typeof AnotherPageRoute
   TestShadcnRoute: typeof TestShadcnRoute
+  AboutIndexRoute: typeof AboutIndexRoute
+  FavoritesIndexRoute: typeof FavoritesIndexRoute
+  MonstersIndexRoute: typeof MonstersIndexRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
+  SpellsIndexRoute: typeof SpellsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +157,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/spells/': {
+      id: '/spells/'
+      path: '/spells'
+      fullPath: '/spells'
+      preLoaderRoute: typeof SpellsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/monsters/': {
+      id: '/monsters/'
+      path: '/monsters'
+      fullPath: '/monsters'
+      preLoaderRoute: typeof MonstersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites/': {
+      id: '/favorites/'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +199,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
   TestShadcnRoute: TestShadcnRoute,
+  AboutIndexRoute: AboutIndexRoute,
+  FavoritesIndexRoute: FavoritesIndexRoute,
+  MonstersIndexRoute: MonstersIndexRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
+  SpellsIndexRoute: SpellsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
