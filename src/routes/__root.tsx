@@ -8,7 +8,6 @@ import { QueryClient } from '@tanstack/react-query'
 import * as React from 'react'
 import appCss from '~/styles/app.css?url'
 import { Navbar } from '~/components/layout/Navbar'
-import Navbar2 from '~/components/ui/shadcn-io/navbar2'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
