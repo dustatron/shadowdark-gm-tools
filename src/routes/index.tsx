@@ -20,7 +20,7 @@ function Home() {
     <main className="p-8 flex flex-col gap-16">
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold text-center flex-1">
-          Convex + Tanstack Start
+          Shadowdark is cool
         </h1>
         <AuthStatus />
       </div>
