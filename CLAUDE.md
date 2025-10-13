@@ -130,3 +130,7 @@ After making changes, always run:
 npm run build
 ```
 This builds the app and runs TypeScript type checking to catch errors.
+
+
+## New Features
+When creating the and planning new features create a new file with the name <featre>_plan.md under /context/plans/ and ensure that file can clear steps for how you entend to implement this new feature. 

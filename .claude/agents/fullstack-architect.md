@@ -67,6 +67,7 @@ You have access to this project's specific patterns from CLAUDE.md:
 
 ### Phase 1: Discovery and Analysis
 When presented with a task:
+always check under ./context/plans to see if the architect has created a plan for this feature.
 1. **Ask clarifying questions** to fully understand requirements, constraints, and success criteria
 2. **Identify core entities** and their relationships in the domain
 3. **Map data flow** from user interaction through components to backend and back
@@ -83,6 +84,7 @@ Before writing code:
 5. **Design error handling** strategy with boundaries and fallbacks
 6. **Plan loading states** and optimistic updates where appropriate
 7. **Consider authentication/authorization** if relevant
+8. **Plan file** create a new markdown file with the name <feature>_plan.md under ./context/plans
 
 ### Phase 3: Implementation Guidance
 When implementing:
