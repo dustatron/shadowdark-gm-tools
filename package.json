@@ -2,6 +2,9 @@
   "name": "gm-tools",
   "private": true,
   "sideEffects": false,
+  "engines": {
+    "node": "22"
+  },
   "type": "module",
   "scripts": {
     "dev": "npx convex dev --once && concurrently -r npm:dev:web npm:dev:convex",
