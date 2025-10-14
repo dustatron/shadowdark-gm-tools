@@ -1,6 +1,6 @@
 # ---- Builder Stage ----
 # Use a Node.js image to build the application
-FROM node:22-slim AS builder
+FROM node:20.19.0-slim AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -18,7 +18,7 @@ RUN npm run build
 
 # ---- Runner Stage ----
 # Use a smaller, more secure base image for the final container
-FROM node:22-slim AS runner
+FROM node:20.19.0-slim AS runner
 
 WORKDIR /app
 
