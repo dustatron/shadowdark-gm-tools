@@ -1,12 +1,16 @@
 # ---- Builder Stage ----
 # Use a Node.js image to build the application
-FROM node:20.19.0-slim AS builder
+FROM node:22-slim AS builder
 
 # Set the working directory
 WORKDIR /app
 
+# Accept CONVEX_URL as a build argument and set it as an environment variable
+# This is required for the `npm run build` command to succeed
+ARG CONVEX_URL
+ENV CONVEX_URL=$CONVEX_URL
+
 # Copy package files and install dependencies
-# This leverages Docker layer caching
 COPY package*.json ./
 RUN npm install
 
@@ -18,14 +22,16 @@ RUN npm run build
 
 # ---- Runner Stage ----
 # Use a smaller, more secure base image for the final container
-FROM node:20.19.0-slim AS runner
+FROM node:22-slim AS runner
 
 WORKDIR /app
 
-# Copy only the necessary files from the builder stage
+# Copy the build output from the builder stage
 COPY --from=builder /app/.output ./.output
+
+# Copy the package files and node_modules from the builder stage
+COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY package.json .
 
 # Expose the port the app runs on
 # The default port for TanStack Start is 3000
