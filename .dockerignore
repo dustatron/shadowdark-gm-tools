@@ -1,2 +1,28 @@
-* 
-!dist/
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+
+# Build artifacts
+.output
+dist
+
+# Environment variables
+.env*
+!example.env.local
+
+# Docker
+Dockerfile
+.dockerignore
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
