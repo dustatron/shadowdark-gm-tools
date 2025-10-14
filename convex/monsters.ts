@@ -103,3 +103,51 @@ export const searchMonsters = query({
     return filteredMonsters
   },
 })
+
+/**
+ * Get a single monster by slug
+ * Returns null if monster not found
+ */
+export const getMonsterBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id('monsters'),
+      _creationTime: v.number(),
+      name: v.string(),
+      slug: v.string(),
+      description: v.string(),
+      armor_class: v.number(),
+      armor_type: v.union(v.string(), v.null()),
+      hit_points: v.number(),
+      attacks: v.string(),
+      movement: v.string(),
+      strength: v.number(),
+      dexterity: v.number(),
+      constitution: v.number(),
+      intelligence: v.number(),
+      wisdom: v.number(),
+      charisma: v.number(),
+      alignment: v.string(),
+      level: v.number(),
+      traits: v.array(
+        v.object({
+          name: v.string(),
+          description: v.string(),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    // Use the by_slug index for efficient lookup
+    const monster = await ctx.db
+      .query('monsters')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .first()
+
+    return monster ?? null
+  },
+})

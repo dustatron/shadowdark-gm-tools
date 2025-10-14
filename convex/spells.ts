@@ -70,3 +70,36 @@ export const searchSpells = query({
     return filteredSpells
   },
 })
+
+/**
+ * Get a single spell by slug
+ * Returns null if spell not found
+ */
+export const getSpellBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id('spells'),
+      _creationTime: v.number(),
+      name: v.string(),
+      slug: v.string(),
+      description: v.string(),
+      classes: v.array(v.string()),
+      duration: v.string(),
+      range: v.string(),
+      tier: v.string(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    // Use the by_slug index for efficient lookup
+    const spell = await ctx.db
+      .query('spells')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .first()
+
+    return spell ?? null
+  },
+})

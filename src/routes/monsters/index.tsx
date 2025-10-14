@@ -1,15 +1,3 @@
-/**
- * Monsters Route - Monster Search and Browse Page
- *
- * This page provides a searchable, sortable table of all monsters in the
- * Shadowdark RPG system. Features include:
- * - Real-time search with debouncing (300ms)
- * - Responsive table layout
- * - Loading states with Suspense
- * - Empty state handling
- * - Accessible keyboard navigation
- */
-
 import { Suspense, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
