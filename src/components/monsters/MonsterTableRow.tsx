@@ -3,8 +3,10 @@
  *
  * Single table row displaying monster statistics.
  * Uses utility formatters for consistent data display.
+ * Clickable row that navigates to monster detail page.
  */
 
+import { Link } from '@tanstack/react-router'
 import type { Monster } from '~/types/monster'
 import {
   formatAlignment,
@@ -46,7 +48,9 @@ interface MonsterTableRowProps {
  */
 export function MonsterTableRow({ monster }: MonsterTableRowProps) {
   return (
-    <div
+    <Link
+      to="/monsters/$slug"
+      params={{ slug: monster.slug }}
       className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 border-b border-gray-200 px-4 py-3 transition-colors hover:bg-gray-50 sm:grid-cols-[2fr_1fr_1fr_1fr_1.5fr_1.5fr] dark:border-gray-700 dark:hover:bg-gray-800"
       role="row"
     >
@@ -88,6 +92,6 @@ export function MonsterTableRow({ monster }: MonsterTableRowProps) {
       >
         {formatMovement(monster.movement)}
       </div>
-    </div>
+    </Link>
   )
 }

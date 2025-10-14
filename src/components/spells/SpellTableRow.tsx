@@ -3,8 +3,10 @@
  *
  * Single table row displaying spell information.
  * Uses utility formatters for consistent data display and badge components for classes.
+ * Clickable row that navigates to spell detail page.
  */
 
+import { Link } from '@tanstack/react-router'
 import type { Spell } from '~/types/spell'
 import {
   formatTier,
@@ -50,7 +52,9 @@ export function SpellTableRow({ spell }: SpellTableRowProps) {
   const tierNum = parseInt(spell.tier, 10)
 
   return (
-    <div
+    <Link
+      to="/spells/$slug"
+      params={{ slug: spell.slug }}
       className="grid grid-cols-[2fr_0.75fr_1.5fr_1fr] gap-4 border-b border-gray-200 px-4 py-3 transition-colors hover:bg-gray-50 sm:grid-cols-[2fr_0.75fr_1.5fr_1fr_1.25fr] dark:border-gray-700 dark:hover:bg-gray-800"
       role="row"
     >
@@ -98,6 +102,6 @@ export function SpellTableRow({ spell }: SpellTableRowProps) {
       >
         {formatDuration(spell.duration)}
       </div>
-    </div>
+    </Link>
   )
 }

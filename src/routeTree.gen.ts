@@ -17,6 +17,8 @@ import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as MonstersIndexRouteImport } from './routes/monsters/index'
 import { Route as FavoritesIndexRouteImport } from './routes/favorites/index'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as SpellsSlugRouteImport } from './routes/spells/$slug'
+import { Route as MonstersSlugRouteImport } from './routes/monsters/$slug'
 
 const TestShadcnRoute = TestShadcnRouteImport.update({
   id: '/test-shadcn',
@@ -58,11 +60,23 @@ const AboutIndexRoute = AboutIndexRouteImport.update({
   path: '/about/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpellsSlugRoute = SpellsSlugRouteImport.update({
+  id: '/spells/$slug',
+  path: '/spells/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonstersSlugRoute = MonstersSlugRouteImport.update({
+  id: '/monsters/$slug',
+  path: '/monsters/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-shadcn': typeof TestShadcnRoute
+  '/monsters/$slug': typeof MonstersSlugRoute
+  '/spells/$slug': typeof SpellsSlugRoute
   '/about': typeof AboutIndexRoute
   '/favorites': typeof FavoritesIndexRoute
   '/monsters': typeof MonstersIndexRoute
@@ -73,6 +87,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-shadcn': typeof TestShadcnRoute
+  '/monsters/$slug': typeof MonstersSlugRoute
+  '/spells/$slug': typeof SpellsSlugRoute
   '/about': typeof AboutIndexRoute
   '/favorites': typeof FavoritesIndexRoute
   '/monsters': typeof MonstersIndexRoute
@@ -84,6 +100,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/test-shadcn': typeof TestShadcnRoute
+  '/monsters/$slug': typeof MonstersSlugRoute
+  '/spells/$slug': typeof SpellsSlugRoute
   '/about/': typeof AboutIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
   '/monsters/': typeof MonstersIndexRoute
@@ -96,6 +114,8 @@ export interface FileRouteTypes {
     | '/'
     | '/anotherPage'
     | '/test-shadcn'
+    | '/monsters/$slug'
+    | '/spells/$slug'
     | '/about'
     | '/favorites'
     | '/monsters'
@@ -106,6 +126,8 @@ export interface FileRouteTypes {
     | '/'
     | '/anotherPage'
     | '/test-shadcn'
+    | '/monsters/$slug'
+    | '/spells/$slug'
     | '/about'
     | '/favorites'
     | '/monsters'
@@ -116,6 +138,8 @@ export interface FileRouteTypes {
     | '/'
     | '/anotherPage'
     | '/test-shadcn'
+    | '/monsters/$slug'
+    | '/spells/$slug'
     | '/about/'
     | '/favorites/'
     | '/monsters/'
@@ -127,6 +151,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnotherPageRoute: typeof AnotherPageRoute
   TestShadcnRoute: typeof TestShadcnRoute
+  MonstersSlugRoute: typeof MonstersSlugRoute
+  SpellsSlugRoute: typeof SpellsSlugRoute
   AboutIndexRoute: typeof AboutIndexRoute
   FavoritesIndexRoute: typeof FavoritesIndexRoute
   MonstersIndexRoute: typeof MonstersIndexRoute
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/spells/$slug': {
+      id: '/spells/$slug'
+      path: '/spells/$slug'
+      fullPath: '/spells/$slug'
+      preLoaderRoute: typeof SpellsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/monsters/$slug': {
+      id: '/monsters/$slug'
+      path: '/monsters/$slug'
+      fullPath: '/monsters/$slug'
+      preLoaderRoute: typeof MonstersSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -199,6 +239,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnotherPageRoute: AnotherPageRoute,
   TestShadcnRoute: TestShadcnRoute,
+  MonstersSlugRoute: MonstersSlugRoute,
+  SpellsSlugRoute: SpellsSlugRoute,
   AboutIndexRoute: AboutIndexRoute,
   FavoritesIndexRoute: FavoritesIndexRoute,
   MonstersIndexRoute: MonstersIndexRoute,
