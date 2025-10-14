@@ -39,16 +39,13 @@ function AuthenticatedMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           className="flex items-center gap-2 px-2 py-1 h-auto"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage src={avatarUrl} alt={displayName} />
             <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
           </Avatar>
-          <span className="hidden md:inline text-sm font-medium">
-            {displayName}
-          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -75,7 +72,7 @@ function AuthenticatedMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => void signOut()}
-          className="cursor-pointer flex items-center gap-2 text-red-600"
+          className="cursor-pointer flex items-center gap-2 text-destructive"
         >
           <LogOut className="h-4 w-4" />
           <span>Sign Out</span>

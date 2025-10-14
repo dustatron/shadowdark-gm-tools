@@ -10,14 +10,14 @@ export function AbilityScoreBox({ label, score }: AbilityScoreCardProps) {
 
   // Determine color based on score value
   const getScoreColor = (value: number) => {
-    if (value > 0) return 'text-black dark:text-gray-400'
-    if (value < 0) return 'text-red-600 dark:text-red-400'
-    return 'text-gray-600 dark:text-gray-400'
+    if (value > 0) return 'text-foreground'
+    if (value < 0) return 'text-destructive'
+    return 'text-muted-foreground'
   }
 
   return (
-    <div className="border-2 border-black bg-white pl-2 text-start dark:border-gray-700 dark:bg-gray-900">
-      <div className="text-lg font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
+    <div className="border bg-card pl-2 text-start">
+      <div className="text-lg font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
       <div

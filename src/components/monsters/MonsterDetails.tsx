@@ -20,7 +20,7 @@ import { AbilityScoreBox } from './AbilityScoreBox'
 import { CombatStateBox } from './CombatStateBox'
 
 const titleBarStyle =
-  'mb-0 text-2xl font-semibold dark:bg-gray-200 bg-black py-1  dark:text-gray-900 text-gray-100 pl-2'
+  'mb-0 text-2xl font-semibold bg-primary text-primary-foreground py-1 pl-2'
 
 interface MonsterDetailsProps {
   monster: Monster
@@ -31,18 +31,14 @@ export function MonsterDetails({ monster }: MonsterDetailsProps) {
     <div className="space-y-3">
       {/* Header Section */}
       <div className="space-y-1">
-        <div className="flex justify-between gap-3 dark:bg-gray-200 bg-black p-2 pl-4">
-          <h1 className="text-4xl font-bold dark:text-gray-900 text-gray-100">
-            {monster.name}
-          </h1>
-          <span className="inline-flex items-center bg-gray-300 dark:bg-gray-800 p-2 font-semibold text-md">
+        <div className="flex justify-between gap-3 bg-primary text-primary-foreground p-2 pl-4">
+          <h1 className="text-4xl font-bold">{monster.name}</h1>
+          <span className="inline-flex items-center bg-secondary text-secondary-foreground p-2 font-semibold text-md">
             Level {formatLevel(monster.level)}
           </span>
         </div>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-xl">
-          {monster.description}
-        </p>
-        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+        <p className="leading-relaxed text-xl">{monster.description}</p>
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <span className="font-extrabold">Alignment:</span>
           <span>{formatAlignment(monster.alignment)}</span>
         </div>
@@ -81,11 +77,9 @@ export function MonsterDetails({ monster }: MonsterDetailsProps) {
       </div>
 
       {/* Attacks */}
-      <div className="border-2 p-2 border-black">
-        <h2 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Attacks:
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+      <div className="border p-2">
+        <h2 className="mb-1 text-2xl font-bold">Attacks:</h2>
+        <p className="text-muted-foreground whitespace-pre-wrap">
           {monster.attacks}
         </p>
       </div>
@@ -98,14 +92,10 @@ export function MonsterDetails({ monster }: MonsterDetailsProps) {
             {monster.traits.map((trait, index) => (
               <div
                 key={index}
-                className="border-2 border-black bg-white p-6 dark:border-gray-700 dark:bg-gray-900"
+                className="border bg-card text-card-foreground p-6"
               >
-                <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {trait.name}
-                </h3>
-                <p className="text-gray-700 dark:text-gray-300">
-                  {trait.description}
-                </p>
+                <h3 className="mb-1 text-lg font-semibold">{trait.name}</h3>
+                <p className="text-muted-foreground">{trait.description}</p>
               </div>
             ))}
           </div>
