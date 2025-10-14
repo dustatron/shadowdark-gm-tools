@@ -18,6 +18,8 @@ import type * as http from "../http.js";
 import type * as monsters from "../monsters.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as seedMonsters from "../seedMonsters.js";
+import type * as seedSpells from "../seedSpells.js";
+import type * as spells from "../spells.js";
 import type * as userProfiles from "../userProfiles.js";
 
 /**
@@ -34,6 +36,8 @@ declare const fullApi: ApiFromModules<{
   monsters: typeof monsters;
   myFunctions: typeof myFunctions;
   seedMonsters: typeof seedMonsters;
+  seedSpells: typeof seedSpells;
+  spells: typeof spells;
   userProfiles: typeof userProfiles;
 }>;
 export declare const api: FilterApi<

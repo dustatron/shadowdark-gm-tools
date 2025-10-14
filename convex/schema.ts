@@ -45,4 +45,16 @@ export default defineSchema({
     .index('by_name', ['name'])
     .index('by_level', ['level'])
     .index('by_slug', ['slug']),
+  spells: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    description: v.string(),
+    classes: v.array(v.string()),
+    duration: v.string(),
+    range: v.string(),
+    tier: v.string(),
+  })
+    .index('by_name', ['name'])
+    .index('by_tier', ['tier'])
+    .index('by_slug', ['slug']),
 })
