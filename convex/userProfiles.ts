@@ -12,6 +12,7 @@ export const getCurrentUserProfile = query({
       userId: v.id('users'),
       displayName: v.string(),
       avatarUrl: v.optional(v.string()),
+      email: v.optional(v.string()),
       favoriteTablesPreferences: v.optional(v.any()),
       themePreference: v.optional(v.string()),
     }),
@@ -29,7 +30,13 @@ export const getCurrentUserProfile = query({
       .withIndex('by_userId', (q) => q.eq('userId', userId))
       .first()
 
-    return profile
+    if (profile) {
+      return {
+        ...profile,
+        email: identity.email,
+      }
+    }
+    return null
   },
 })
 

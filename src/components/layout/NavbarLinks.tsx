@@ -1,5 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { cn } from '~/lib/utils'
+import { Button } from '../ui/button'
 
 interface NavLink {
   to: string
@@ -27,25 +28,29 @@ export function NavbarLinks({
   return (
     <nav
       className={cn(
-        isMobile ? 'flex flex-col gap-4' : 'flex items-center gap-6',
+        isMobile ? 'flex flex-col gap-2' : 'flex items-center gap-2',
       )}
     >
       {navLinks.map((link) => {
         const isActive = currentPath.startsWith(link.to)
 
         return (
-          <Link
-            key={link.to}
-            to={link.to}
-            onClick={onLinkClick}
-            className={cn(
-              'font-medium transition-colors',
-              isMobile ? 'text-lg py-2' : 'text-sm',
-              isActive ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900',
-            )}
-          >
-            {link.label}
-          </Link>
+          <Button variant={isActive ? 'ghost' : 'outline'}>
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={onLinkClick}
+              className={cn(
+                'font-medium transition-colors',
+                isMobile ? 'text-lg py-2' : 'text-lg',
+                isActive
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {link.label}
+            </Link>
+          </Button>
         )
       })}
     </nav>
