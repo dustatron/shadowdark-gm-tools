@@ -5,6 +5,7 @@
 **Project Goal**: Create a fast, user-friendly web application for Shadowdark RPG Game Masters to browse, search, and organize monsters and spells during gameplay sessions.
 
 **Target Users**:
+
 - Game Masters running Shadowdark TTRPG sessions
 - GMs who need quick reference during active play
 - GMs preparing encounters and managing campaign content
@@ -14,6 +15,7 @@
 ## Project Scope
 
 ### In Scope
+
 - Monster database with full stat blocks and advanced filtering
 - Spell database with complete spell information and search
 - User authentication via Discord OAuth
@@ -24,6 +26,7 @@
 - Dark/light theme support
 
 ### Out of Scope (Future Phases)
+
 - Encounter builder with CR calculation
 - Dice roller functionality
 - Custom monster/spell creation
@@ -35,6 +38,7 @@
 ## Current Implementation Status
 
 ### Completed
+
 - Discord OAuth authentication (Convex Auth)
 - Responsive navigation bar with mobile menu
 - shadcn/ui component library integration
@@ -44,6 +48,7 @@
 - Convex backend infrastructure
 
 ### Available Data
+
 - Complete monster database (`coreData/monsters.json`)
   - 100+ monsters with full stat blocks
   - All Shadowdark core content
@@ -54,11 +59,13 @@
 ## Milestones
 
 ### Milestone 1: Monster Database (MVP Core Feature)
+
 **Goal**: Implement a fully functional, searchable monster database that GMs can use during sessions.
 
 **Features**:
 
 #### 1.1 Monster Data Seeding
+
 - **Description**: Load monster data from JSON into Convex database
 - **User Flow**: Automatic on deployment/one-time seeding operation
 - **Frontend Requirements**:
@@ -83,18 +90,20 @@
       charisma: v.number(),
       alignment: v.string(), // "L", "N", or "C"
       level: v.number(),
-      traits: v.array(v.object({
-        name: v.string(),
-        description: v.string(),
-      })),
+      traits: v.array(
+        v.object({
+          name: v.string(),
+          description: v.string(),
+        }),
+      ),
     })
-      .index("by_slug", ["slug"])
-      .index("by_level", ["level"])
-      .index("by_alignment", ["alignment"])
-      .index("by_name", ["name"])
-      .searchIndex("search_monsters", {
-        searchField: "name",
-        filterFields: ["level", "alignment"]
+      .index('by_slug', ['slug'])
+      .index('by_level', ['level'])
+      .index('by_alignment', ['alignment'])
+      .index('by_name', ['name'])
+      .searchIndex('search_monsters', {
+        searchField: 'name',
+        filterFields: ['level', 'alignment'],
       })
     ```
   - Mutation: `seedMonsters` - Bulk import from JSON
@@ -106,6 +115,7 @@
   - [ ] Search index is configured for name-based searches
 
 #### 1.2 Monster Browser Page
+
 - **Description**: Main listing page showing all monsters with search and filters
 - **User Flow**:
   1. User navigates to /monsters
@@ -147,6 +157,7 @@
   - [ ] Loading states display during data fetch
 
 #### 1.3 Monster Detail Page
+
 - **Description**: Full stat block view for individual monsters
 - **User Flow**:
   1. User clicks monster card from browser
@@ -192,6 +203,7 @@
   - [ ] Page loads in < 1 second
 
 #### 1.4 Monster Search Functionality
+
 - **Description**: Fast, intelligent search across monster names and descriptions
 - **User Flow**:
   1. User types in search bar
@@ -224,11 +236,13 @@
 ---
 
 ### Milestone 2: Spell Database
+
 **Goal**: Implement a fully functional, searchable spell database with all Shadowdark spells.
 
 **Features**:
 
 #### 2.1 Spell Data Seeding
+
 - **Description**: Load spell data from JSON into Convex database
 - **User Flow**: Automatic on deployment/one-time seeding operation
 - **Frontend Requirements**:
@@ -245,12 +259,12 @@
       range: v.string(), // "Self", "Close", "Near", "Far", "Unlimited"
       tier: v.string(), // "1" through "5"
     })
-      .index("by_slug", ["slug"])
-      .index("by_tier", ["tier"])
-      .index("by_class", ["classes"])
-      .searchIndex("search_spells", {
-        searchField: "name",
-        filterFields: ["tier", "classes", "range", "duration"]
+      .index('by_slug', ['slug'])
+      .index('by_tier', ['tier'])
+      .index('by_class', ['classes'])
+      .searchIndex('search_spells', {
+        searchField: 'name',
+        filterFields: ['tier', 'classes', 'range', 'duration'],
       })
     ```
   - Mutation: `seedSpells` - Bulk import from JSON
@@ -262,6 +276,7 @@
   - [ ] Search index is configured
 
 #### 2.2 Spell Browser Page
+
 - **Description**: Main listing page for browsing and filtering spells
 - **User Flow**:
   1. User navigates to /spells
@@ -302,6 +317,7 @@
   - [ ] Mobile-friendly layout
 
 #### 2.3 Spell Detail Page
+
 - **Description**: Full spell information display
 - **User Flow**:
   1. User clicks spell card
@@ -339,6 +355,7 @@
   - [ ] 404 for invalid slugs
 
 #### 2.4 Spell Search and Filtering
+
 - **Description**: Fast search and intelligent filtering for spells
 - **User Flow**:
   1. User searches by spell name
@@ -368,27 +385,29 @@
 ---
 
 ### Milestone 3: Favorites System
+
 **Goal**: Allow authenticated users to save and organize their favorite monsters and spells.
 
 **Features**:
 
 #### 3.1 Favorites Data Model
+
 - **Description**: Backend infrastructure for user favorites
 - **Backend Requirements (Convex)**:
   - Schema:
     ```typescript
     favorites: defineTable({
-      userId: v.id("users"),
-      itemType: v.union(v.literal("monster"), v.literal("spell")),
-      itemId: v.id("monsters" | "spells"), // Need to handle union types
+      userId: v.id('users'),
+      itemType: v.union(v.literal('monster'), v.literal('spell')),
+      itemId: v.id('monsters' | 'spells'), // Need to handle union types
       itemSlug: v.string(), // Denormalized for faster queries
       itemName: v.string(), // Denormalized for display
       addedAt: v.number(), // Timestamp
       notes: v.optional(v.string()), // User's personal notes
     })
-      .index("by_userId_and_type", ["userId", "itemType"])
-      .index("by_userId_and_itemSlug", ["userId", "itemSlug"])
-      .index("by_userId", ["userId"])
+      .index('by_userId_and_type', ['userId', 'itemType'])
+      .index('by_userId_and_itemSlug', ['userId', 'itemSlug'])
+      .index('by_userId', ['userId'])
     ```
   - Mutation: `addFavorite`
     - Args: `{ itemType: "monster" | "spell", itemSlug: string }`
@@ -418,6 +437,7 @@
   - [ ] Timestamps are recorded correctly
 
 #### 3.2 Favorite Button Component
+
 - **Description**: Reusable button for toggling favorite status
 - **User Flow**:
   1. User clicks heart icon on monster/spell
@@ -448,6 +468,7 @@
   - [ ] Button is accessible (keyboard navigation)
 
 #### 3.3 Favorites Page
+
 - **Description**: Dedicated page showing user's saved favorites
 - **User Flow**:
   1. User navigates to /favorites
@@ -493,6 +514,7 @@
   - [ ] Page is mobile-friendly
 
 #### 3.4 Favorites Integration
+
 - **Description**: Integrate favorite buttons throughout app
 - **User Flow**:
   1. Favorite buttons appear on detail pages
@@ -514,11 +536,13 @@
 ---
 
 ### Milestone 4: Polish & Performance
+
 **Goal**: Enhance user experience with performance optimizations, improved UX, and professional polish.
 
 **Features**:
 
 #### 4.1 Loading States & Skeleton Screens
+
 - **Description**: Smooth loading experiences throughout the app
 - **Frontend Requirements**:
   - Skeleton screens for:
@@ -539,6 +563,7 @@
   - [ ] No blank screens during navigation
 
 #### 4.2 Error Handling & Empty States
+
 - **Description**: Graceful error handling and helpful empty states
 - **Frontend Requirements**:
   - Error boundaries for route-level errors
@@ -560,6 +585,7 @@
   - [ ] Network errors are handled
 
 #### 4.3 Performance Optimization
+
 - **Description**: Fast load times and smooth interactions
 - **Backend Requirements (Convex)**:
   - Verify all queries use indexes
@@ -587,6 +613,7 @@
   - [ ] Lighthouse scores meet targets
 
 #### 4.4 Responsive Design Refinement
+
 - **Description**: Perfect experience across all device sizes
 - **Frontend Requirements**:
   - Test and refine on:
@@ -607,6 +634,7 @@
   - [ ] Tested on iOS and Android
 
 #### 4.5 Accessibility (A11y)
+
 - **Description**: Ensure app is usable by everyone
 - **Frontend Requirements**:
   - Semantic HTML throughout
@@ -628,11 +656,13 @@
 ---
 
 ### Milestone 5: Enhanced Features (Phase 2)
+
 **Goal**: Add quality-of-life features and advanced functionality.
 
 **Features**:
 
 #### 5.1 Advanced Filtering
+
 - **Description**: More sophisticated filtering options
 - **Frontend Requirements**:
   - Monsters:
@@ -655,6 +685,7 @@
   - [ ] Quick filters provide shortcuts
 
 #### 5.2 Collections/Lists
+
 - **Description**: Organize favorites into named collections
 - **User Flow**:
   1. Create a collection (e.g., "Dungeon Level 1")
@@ -663,25 +694,27 @@
   4. Share collection URL (optional)
 - **Backend Requirements (Convex)**:
   - Schema:
+
     ```typescript
     collections: defineTable({
-      userId: v.id("users"),
+      userId: v.id('users'),
       name: v.string(),
       description: v.optional(v.string()),
       createdAt: v.number(),
       updatedAt: v.number(),
       isPublic: v.boolean(),
-    }).index("by_userId", ["userId"])
+    }).index('by_userId', ['userId'])
 
     collectionItems: defineTable({
-      collectionId: v.id("collections"),
-      itemType: v.union(v.literal("monster"), v.literal("spell")),
+      collectionId: v.id('collections'),
+      itemType: v.union(v.literal('monster'), v.literal('spell')),
       itemSlug: v.string(),
       itemName: v.string(),
       addedAt: v.number(),
       order: v.number(),
-    }).index("by_collectionId", ["collectionId"])
+    }).index('by_collectionId', ['collectionId'])
     ```
+
 - **Frontend Requirements**:
   - Collection management page
   - Add to collection from detail pages
@@ -696,6 +729,7 @@
   - [ ] Collections are printable
 
 #### 5.3 Quick Reference Mode
+
 - **Description**: Compact view for quick lookups during play
 - **Frontend Requirements**:
   - Toggle to "Quick Reference" mode
@@ -710,16 +744,17 @@
   - [ ] Print layout is clean
 
 #### 5.4 Recent Views & History
+
 - **Description**: Track recently viewed monsters and spells
 - **Backend Requirements (Convex)**:
   - Schema:
     ```typescript
     recentViews: defineTable({
-      userId: v.id("users"),
-      itemType: v.union(v.literal("monster"), v.literal("spell")),
+      userId: v.id('users'),
+      itemType: v.union(v.literal('monster'), v.literal('spell')),
       itemSlug: v.string(),
       viewedAt: v.number(),
-    }).index("by_userId", ["userId"])
+    }).index('by_userId', ['userId'])
     ```
   - Mutation: `recordView` - Automatically called on detail page views
   - Query: `getRecentViews` - Returns last 20 views
@@ -738,6 +773,7 @@
 ## Technical Requirements
 
 ### Frontend Stack
+
 - **Framework**: TanStack Start (React 19)
 - **Styling**: TailwindCSS 4
 - **Components**: shadcn/ui
@@ -751,12 +787,14 @@
 - **Forms**: React Hook Form + Zod validation (if complex forms needed)
 
 ### Backend Stack
+
 - **Database & Backend**: Convex
 - **Authentication**: Convex Auth (Discord OAuth)
 - **Functions**: Convex queries, mutations, actions
 - **Real-time**: Convex subscriptions (automatic)
 
 ### Build & Deploy
+
 - **Build Tool**: Vite
 - **Package Manager**: npm
 - **Deployment**: (TBD - likely Vercel for frontend, Convex Cloud for backend)
@@ -767,6 +805,7 @@
 ### Key Entities
 
 #### Monster
+
 - **Purpose**: Store complete monster stat blocks for reference
 - **Key Fields**:
   - Identity: `name`, `slug`, `level`, `alignment`
@@ -782,6 +821,7 @@
   - `search_monsters` - Full-text search
 
 #### Spell
+
 - **Purpose**: Store complete spell descriptions and metadata
 - **Key Fields**:
   - Identity: `name`, `slug`, `tier`
@@ -795,6 +835,7 @@
   - `search_spells` - Full-text search
 
 #### Favorite
+
 - **Purpose**: Track user-saved monsters and spells
 - **Key Fields**:
   - Reference: `userId`, `itemType`, `itemSlug`, `itemName`
@@ -806,6 +847,7 @@
   - `by_userId_and_itemSlug` - Check if item is favorited
 
 #### UserProfile
+
 - **Purpose**: Store user preferences and display information
 - **Key Fields**:
   - Identity: `userId`, `displayName`, `avatarUrl`
@@ -819,6 +861,7 @@
 ### Key User Flows
 
 #### 1. Quick Monster Lookup During Session
+
 - **Entry point**: GM needs to reference a monster during play
 - **Steps**:
   1. Open app on phone/tablet
@@ -833,6 +876,7 @@
   - Not found: Suggest similar names
 
 #### 2. Preparing an Encounter
+
 - **Entry point**: GM is planning next session
 - **Steps**:
   1. Navigate to monsters browser
@@ -845,6 +889,7 @@
 - **Error states**: No monsters in level range (suggest expanding range)
 
 #### 3. Building a Spell List
+
 - **Entry point**: Player leveled up, GM helping choose spells
 - **Steps**:
   1. Navigate to spells browser
@@ -857,6 +902,7 @@
 - **Error states**: None in tier (shouldn't happen with full data)
 
 #### 4. First-Time User Experience
+
 - **Entry point**: New GM discovers the app
 - **Steps**:
   1. Land on home page
@@ -874,16 +920,19 @@
 ## Integration Points
 
 ### Discord OAuth (Convex Auth)
+
 - Already implemented
 - Provides: `userId`, `displayName`, `avatarUrl`
 - Used for: Authentication, user profiles, favorites ownership
 
 ### Convex Backend
+
 - Real-time database and functions
 - Handles: Data storage, queries, mutations, auth
 - Configuration: `VITE_CONVEX_URL` environment variable
 
 ### shadcn/ui Components
+
 - Already integrated
 - Provides: Pre-built accessible components
 - Customized with: Tailwind theme, dark mode support
@@ -891,6 +940,7 @@
 ## Assumptions & Constraints
 
 ### Assumptions
+
 - Users have internet access during sessions (no offline mode in MVP)
 - Discord OAuth is acceptable auth method for target users
 - Monster and spell data from `coreData` is complete and accurate
@@ -898,6 +948,7 @@
 - Search can be implemented efficiently with Convex search indexes
 
 ### Constraints
+
 - Must comply with Shadowdark third-party license
 - Must attribute original data source (open-shadowdark)
 - Cannot modify or sell core Shadowdark content
@@ -905,6 +956,7 @@
 - Must be free for users (monetization out of scope)
 
 ### Technical Constraints
+
 - Convex free tier limits (if applicable)
 - Search index limitations in Convex
 - Array field indexing complexity (for spell classes)
@@ -913,18 +965,21 @@
 ## Success Metrics
 
 ### Primary KPIs
+
 - **Active Users**: Weekly active GMs using the app
 - **Session Usage**: % of users who return during session (within 2-7 days)
 - **Search Performance**: Average search result time < 500ms
 - **Favorites Adoption**: % of authenticated users who add favorites
 
 ### Secondary KPIs
+
 - **Repeat Usage**: Users returning 2+ times per week
 - **Favorites Per User**: Average # of favorited items
 - **Browse vs Search**: % of traffic to browse pages vs search
 - **Mobile vs Desktop**: Device breakdown (expect 70%+ mobile)
 
 ### User Satisfaction
+
 - Page load time < 2 seconds (measured)
 - Zero critical bugs in production
 - Positive user feedback (if feedback mechanism added)
@@ -935,6 +990,7 @@
 ### Page-Specific SEO
 
 #### Monster Detail Pages
+
 - **Title**: `{Monster Name} - Level {X} Monster | Shadowdark GM Tools`
 - **Meta Description**: First 150 chars of monster description
 - **Open Graph**: Monster name, level, AC, HP
@@ -942,6 +998,7 @@
 - **Canonical URL**: `/monsters/{slug}`
 
 #### Spell Detail Pages
+
 - **Title**: `{Spell Name} - Tier {X} Spell | Shadowdark GM Tools`
 - **Meta Description**: First 150 chars of spell description
 - **Open Graph**: Spell name, tier, classes, range
@@ -949,11 +1006,13 @@
 - **Canonical URL**: `/spells/{slug}`
 
 #### Browse Pages
+
 - **Title**: `Browse {Monsters|Spells} | Shadowdark GM Tools`
 - **Meta Description**: "Browse and search all Shadowdark {monsters|spells}. Filter by level, class, and more. Free tool for Game Masters."
 - **Canonical URL**: `/monsters` or `/spells` (ignore query params)
 
 ### Technical SEO
+
 - Server-side rendering with TanStack Start
 - Sitemap.xml with all monsters and spells
 - Robots.txt allowing all crawlers
@@ -962,6 +1021,7 @@
 - No broken links
 
 ### Performance for SEO
+
 - **Core Web Vitals Targets**:
   - LCP (Largest Contentful Paint) < 2.5s
   - FID (First Input Delay) < 100ms
@@ -973,6 +1033,7 @@
 ## Open Questions
 
 ### Product Questions
+
 - [ ] Should favorites have folders/categories beyond collections?
 - [ ] Should we support exporting favorites as PDF or text?
 - [ ] Do we need print-optimized stat blocks or is standard view sufficient?
@@ -980,6 +1041,7 @@
 - [ ] Do users want to sort favorites by different criteria (alphabetical, level, recently added)?
 
 ### Technical Questions
+
 - [ ] What's the best approach for handling the spell `classes` array field in Convex indexes?
 - [ ] Should we implement pagination or infinite scroll for browse pages?
 - [ ] Do we need a separate seeding script or can we use a one-time mutation?
@@ -988,6 +1050,7 @@
 - [ ] Should we implement optimistic updates for all mutations or just favorites?
 
 ### Design Questions
+
 - [ ] What visual theme best represents Shadowdark aesthetic (dark, gritty, minimalist)?
 - [ ] Should stat blocks use traditional D&D layout or a custom Shadowdark-specific format?
 - [ ] How should we differentiate wizard vs priest spells visually (color, icons, both)?
@@ -995,6 +1058,7 @@
 - [ ] Should we use card or table layout for browse views (or toggle between them)?
 
 ### Deployment Questions
+
 - [ ] What's the deployment strategy (Vercel, Netlify, other)?
 - [ ] Do we need staging environment before production?
 - [ ] How do we handle database migrations in Convex?
@@ -1006,6 +1070,7 @@
 ## Implementation Priorities
 
 ### Must Have (MVP - Milestones 1-3)
+
 1. Monster database with search and filters
 2. Spell database with search and filters
 3. Favorites system for authenticated users
@@ -1014,6 +1079,7 @@
 6. Fast search (< 1s results)
 
 ### Should Have (Post-MVP - Milestone 4)
+
 1. Loading states and skeleton screens
 2. Error handling and empty states
 3. Performance optimization (< 500ms search)
@@ -1022,6 +1088,7 @@
 6. SEO optimization
 
 ### Nice to Have (Future - Milestone 5)
+
 1. Collections/lists organization
 2. Advanced filtering (traits, movement types)
 3. Recent views history
@@ -1034,6 +1101,7 @@
 ## Development Timeline Estimates
 
 ### Milestone 1: Monster Database
+
 - **Estimated Time**: 5-7 days
 - **Breakdown**:
   - Data seeding: 1 day
@@ -1043,6 +1111,7 @@
   - Testing & refinement: 1 day
 
 ### Milestone 2: Spell Database
+
 - **Estimated Time**: 4-6 days
 - **Breakdown**:
   - Data seeding: 0.5 days
@@ -1052,6 +1121,7 @@
   - Testing & refinement: 1 day
 
 ### Milestone 3: Favorites System
+
 - **Estimated Time**: 4-5 days
 - **Breakdown**:
   - Backend schema & functions: 1 day
@@ -1061,6 +1131,7 @@
   - Testing: 1 day
 
 ### Milestone 4: Polish & Performance
+
 - **Estimated Time**: 5-7 days
 - **Breakdown**:
   - Loading states: 1 day
@@ -1070,6 +1141,7 @@
   - Accessibility: 1.5 days
 
 ### Milestone 5: Enhanced Features (Phase 2)
+
 - **Estimated Time**: 8-10 days
 - **Breakdown**:
   - Advanced filtering: 2 days
@@ -1087,18 +1159,21 @@
 ## Notes for Implementation
 
 ### Code Organization
+
 - **Components**: Organize by feature (monsters/, spells/, favorites/, shared/ui/)
 - **Hooks**: Custom hooks in `src/hooks/` (useDebounce, useFavorites, etc.)
 - **Utils**: Helper functions in `src/utils/` (formatting, parsing, etc.)
 - **Types**: Shared types in `src/types/` or use Convex-generated types
 
 ### Testing Strategy
+
 - **Manual Testing**: Each feature tested across devices before marking complete
 - **Browser Testing**: Chrome, Safari, Firefox (mobile and desktop)
 - **Device Testing**: iPhone, iPad, Android phone
 - **Performance Testing**: Lighthouse CI on each milestone
 
 ### Documentation Needs
+
 - README with setup instructions
 - Environment variable configuration
 - Deployment guide
@@ -1106,6 +1181,7 @@
 - Component props documentation (for complex components)
 
 ### Future Considerations
+
 - Analytics integration (user behavior, popular monsters/spells)
 - User feedback mechanism (ratings, comments)
 - Encounter builder (calculate CR, balance encounters)
@@ -1122,6 +1198,7 @@
 ## Appendix
 
 ### Shadowdark License & Attribution
+
 - **License**: Third-Party License
 - **Attribution Required**: "Shadowdark RPG content used under license"
 - **Source**: open-shadowdark repository (GitHub)
@@ -1129,6 +1206,7 @@
 - **Implementation**: Display attribution in footer, about page, and any documentation
 
 ### Data Source Details
+
 - **Monsters**: `coreData/monsters.json` (~100 monsters)
 - **Spells**: `coreData/spells.json` (~100 spells)
 - **Format**: JSON arrays with consistent schema
@@ -1136,6 +1214,7 @@
 - **Updates**: Manual updates when new content released (not in scope for MVP)
 
 ### Design Assets Needed
+
 - Logo for Shadowdark GM Tools (custom or text-based)
 - Favicon
 - Social media preview image (Open Graph)
@@ -1145,6 +1224,7 @@
 - Loading animations (optional)
 
 ### Browser Support
+
 - **Target**: Modern browsers (last 2 versions)
 - **Chrome**: Full support
 - **Safari**: Full support (iOS Safari crucial for mobile)
@@ -1159,6 +1239,7 @@
 This specification provides a comprehensive roadmap for building the Shadowdark GM Tools application. The phased approach allows for iterative development and early user feedback while maintaining a clear vision for the complete product.
 
 **Next Steps**:
+
 1. Review and validate this specification with stakeholders
 2. Clarify open questions
 3. Begin implementation with Milestone 1 (Monster Database)

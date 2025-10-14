@@ -1,0 +1,6 @@
+- use orchestrations and parallel delegation <reset of the prompt>
+- Give me a resume prompt so we can work on the next task with parallel delegation
+  - Rewind conversation prompt
+  - tickets should be smaller in scope
+- ultrathink and create the next steps and orchestrate to the tasks
+- <before pr> Prove to me that this ticket is finished and it works, does it build, do the test pass, is it free of TS errors.

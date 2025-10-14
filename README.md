@@ -86,6 +86,7 @@ npm run dev
 ```
 
 This starts both the Convex dev server and the web dev server. The app will be available at:
+
 - Web app: http://localhost:3000
 - Convex dashboard: https://dashboard.convex.dev
 
@@ -133,6 +134,7 @@ gm-tools/
 ## Authentication
 
 The app uses Discord OAuth for authentication:
+
 - **Public features**: Search monsters and spells (no login required)
 - **Authenticated features**: Save campaigns, prep work, and preferences
 

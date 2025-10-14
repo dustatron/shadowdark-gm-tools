@@ -1,9 +1,11 @@
 # Shadowdark GM Tool - Website Specification
 
 ## Overview
+
 A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize monsters and spells for quick reference during gameplay.
 
 ## Target Users
+
 - Game Masters running Shadowdark TTRPG sessions
 - Users who need quick access to game content during sessions
 - GMs who want to prepare and organize encounters
@@ -11,6 +13,7 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
 ## Core Features
 
 ### 1. Monster Database
+
 - **Browse/Search**: View all available monsters with search and filter capabilities
 - **Monster Details**: Display complete stat blocks including:
   - Name and description
@@ -22,7 +25,7 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
   - Alignment (L=Lawful, N=Neutral, C=Chaotic)
   - Level
   - Traits/Special abilities
-- **Search Filters**: 
+- **Search Filters**:
   - Filter by level (difficulty)
   - Filter by alignment
   - Filter by movement type (fly, swim, burrow, etc.)
@@ -30,6 +33,7 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
   - Filter by trait/ability names
 
 ### 2. Spell Database
+
 - **Browse/Search**: View all available spells with search and filter capabilities
 - **Spell Details**: Display complete spell information including:
   - Name and description (effect)
@@ -37,7 +41,7 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
   - Range (Self, Close, Near, Far, Unlimited)
   - Duration (Instant, Focus, rounds, hours, days)
   - Classes (wizard, priest, or both)
-- **Search Filters**: 
+- **Search Filters**:
   - Filter by tier (1-5)
   - Filter by class (wizard, priest, both)
   - Filter by range
@@ -45,12 +49,14 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
   - Search by name or keywords in description
 
 ### 3. Personal Lists/Collections
+
 - **Save Functionality**: Allow users to save monsters and spells to personal lists
 - **Multiple Lists**: Support creating multiple named lists (e.g., "Session 3 Encounters", "Dungeon Boss Pool")
 - **Quick Reference**: Easy access to saved items during gameplay
 - **List Management**: Add, remove, and organize saved items
 
 ### 4. User Interface Requirements
+
 - **Clean, Simple Design**: Minimize distractions during gameplay
 - **Mobile Responsive**: Usable on tablets and phones at the game table
 - **Quick Search**: Prominent search bar on main pages
@@ -59,11 +65,13 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
 ## Technical Requirements
 
 ### Data Storage
+
 - User accounts with secure authentication
 - Cloud-based storage for personal lists
 - Persistent data across devices
 
 ### Performance
+
 - Fast search results (< 1 second)
 - Offline capability (optional but recommended)
 - Quick page loads
@@ -101,6 +109,7 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
    - Account management
 
 ## Future Enhancements (Phase 2)
+
 - Encounter builder with CR calculation
 - Dice roller integration
 - Share lists with other users
@@ -111,7 +120,9 @@ A web-based tool for Shadowdark RPG Game Masters to search, browse, and organize
 ## Data Structure
 
 ### Monster Data Fields (from existing JSON)
+
 Based on the open-shadowdark repository data:
+
 - `name`: Monster name (string)
 - `slug`: URL-friendly identifier (string)
 - `description`: Flavor text (string)
@@ -132,11 +143,13 @@ Based on the open-shadowdark repository data:
   - Each trait has `name` and `description`
 
 ### Data Source
+
 - **Initial Data**: GitHub repository at `https://github.com/ashleytowner/open-shadowdark`
 - **Content Format**: JSON files with structured monster data
 - **License Compliance**: Ensure proper attribution and compliance with Shadowdark third-party license
 
 ## Success Metrics
+
 - Quick lookup time during sessions
 - User retention and repeat usage
 - Number of saved lists per user

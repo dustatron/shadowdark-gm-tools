@@ -18,6 +18,7 @@ The specification is **well-structured and comprehensive** from a product perspe
 ### Key Findings
 
 #### Critical Issues (Must Fix Before Implementation)
+
 1. **Schema Type Mismatches**: Multiple validator type errors that will cause runtime failures
 2. **Search Index Configuration**: Overly optimistic search implementation that may not meet performance targets
 3. **Missing Union Type Handling**: Favorites schema has unimplemented union ID types
@@ -25,6 +26,7 @@ The specification is **well-structured and comprehensive** from a product perspe
 5. **Array Field Indexing**: Spell classes array filtering will be complex with proposed approach
 
 #### Major Concerns (Address During Implementation)
+
 6. **Pagination Strategy Undefined**: Cursor-based pagination specified but implementation details missing
 7. **Denormalization Trade-offs**: Unclear when to denormalize vs. join
 8. **Real-time Performance**: No consideration of Convex subscription costs
@@ -32,12 +34,14 @@ The specification is **well-structured and comprehensive** from a product perspe
 10. **Error Boundary Architecture**: Missing specific error handling patterns
 
 #### Opportunities (Recommendations)
+
 11. Component architecture could benefit from more specific composition patterns
 12. State management strategy needs refinement for complex filter interactions
 13. URL state management approach needs validation for filter combinations
 14. Print functionality requirements are vague
 
 ### Severity Ratings Legend
+
 - **CRITICAL**: Blocks implementation, requires immediate fix
 - **HIGH**: Will cause significant issues, should fix before starting milestone
 - **MEDIUM**: Should address during implementation, may cause technical debt
@@ -50,6 +54,7 @@ The specification is **well-structured and comprehensive** from a product perspe
 ### 1.1 Monster Schema (Milestone 1.1)
 
 #### Proposed Schema
+
 ```typescript
 monsters: defineTable({
   name: v.string(),
@@ -68,16 +73,19 @@ monsters: defineTable({
   charisma: v.number(),
   alignment: v.string(),
   level: v.number(),
-  traits: v.array(v.object({
-    name: v.string(),
-    description: v.string(),
-  })),
+  traits: v.array(
+    v.object({
+      name: v.string(),
+      description: v.string(),
+    }),
+  ),
 })
 ```
 
 #### Issues Identified
 
 **CRITICAL - Type Mismatch: `armor_type`**
+
 - **Issue**: `v.union(v.string(), v.null())` is invalid Convex validator syntax
 - **Correct Syntax**: `v.optional(v.string())` or storing empty string for null cases
 - **Impact**: Schema definition will fail at runtime
@@ -89,23 +97,26 @@ monsters: defineTable({
   ```
 
 **HIGH - Missing Unique Constraint**
+
 - **Issue**: `slug` field has no unique constraint guarantee
 - **Impact**: Duplicate slugs could cause detail page conflicts
 - **Recommendation**: Add validation in seeding mutation to check for duplicates, as Convex doesn't support unique constraints natively
 - **Implementation**:
   ```typescript
   // In seedMonsters mutation
-  const existing = await ctx.db.query("monsters")
-    .withIndex("by_slug", (q) => q.eq("slug", monster.slug))
-    .first();
+  const existing = await ctx.db
+    .query('monsters')
+    .withIndex('by_slug', (q) => q.eq('slug', monster.slug))
+    .first()
   if (existing) {
-    throw new Error(`Duplicate slug: ${monster.slug}`);
+    throw new Error(`Duplicate slug: ${monster.slug}`)
   }
   ```
 
 **MEDIUM - Index Strategy Review**
 
 Proposed indexes:
+
 ```typescript
 .index("by_slug", ["slug"])
 .index("by_level", ["level"])
@@ -118,12 +129,14 @@ Proposed indexes:
 ```
 
 **Analysis**:
+
 - ✅ **Good**: `by_slug` for detail page lookups (most common query)
 - ✅ **Good**: `by_level` and `by_alignment` for filtering
 - ⚠️ **Concern**: `by_name` is redundant with `search_monsters` search index
 - ⚠️ **Missing**: Combined index for common filter combinations
 
 **Recommendation**:
+
 ```typescript
 .index("by_slug", ["slug"]) // Primary lookup
 .index("by_level", ["level"]) // Single filter
@@ -138,6 +151,7 @@ Proposed indexes:
 **Note**: Remove `by_name` index as the search index handles name-based queries more efficiently.
 
 **MEDIUM - Ability Score Storage**
+
 - **Issue**: Storing modifiers instead of base scores
 - **Data Check**: From sample data, values like `strength: 4` appear to be modifiers
 - **Consideration**: This matches Shadowdark stat block format (shows modifiers, not base scores)
@@ -148,6 +162,7 @@ Proposed indexes:
   ```
 
 **LOW - Traits Search**
+
 - **Issue**: Spec mentions "optionally search in descriptions and trait names" but search index doesn't include traits
 - **Impact**: Cannot search traits without adding to search index
 - **Recommendation**: Add trait names to search index for Phase 2 (Milestone 5.1 - Advanced Filtering)
@@ -166,6 +181,7 @@ Proposed indexes:
 ### 1.2 Spell Schema (Milestone 2.1)
 
 #### Proposed Schema
+
 ```typescript
 spells: defineTable({
   name: v.string(),
@@ -181,6 +197,7 @@ spells: defineTable({
 #### Issues Identified
 
 **HIGH - Tier Type Mismatch**
+
 - **Issue**: `tier: v.string()` but used as number in many contexts
 - **Data Reality**: JSON has `"tier": "1"` as strings
 - **Usage Context**: Filtering by tier range (`minLevel`, `maxLevel` pattern suggested for monsters)
@@ -203,6 +220,7 @@ spells: defineTable({
   ```
 
 **CRITICAL - Array Field Indexing Challenge**
+
 - **Issue**: `classes: v.array(v.string())` with index `by_class`
 - **Convex Reality**: Cannot create traditional index on array fields
 - **Proposed Index**: `.index("by_class", ["classes"])` - **This will not work as expected**
@@ -210,6 +228,7 @@ spells: defineTable({
 - **Solutions**:
 
   **Option A - Denormalize (Recommended)**:
+
   ```typescript
   // Keep original array
   classes: v.array(v.string()),
@@ -217,6 +236,7 @@ spells: defineTable({
   isWizardSpell: v.boolean(),
   isPriestSpell: v.boolean(),
   ```
+
   ```typescript
   .index("by_wizard", ["isWizardSpell"])
   .index("by_priest", ["isPriestSpell"])
@@ -233,12 +253,14 @@ spells: defineTable({
 **Recommendation**: Use Option A (denormalization with boolean flags) for efficient filtering.
 
 **MEDIUM - Missing Unique Slug Validation**
+
 - Same issue as monsters - no unique constraint on `slug`
 - Apply same validation approach in seeding
 
 **MEDIUM - Index Optimization**
 
 Proposed indexes:
+
 ```typescript
 .index("by_slug", ["slug"])
 .index("by_tier", ["tier"])
@@ -250,11 +272,13 @@ Proposed indexes:
 ```
 
 **Issues**:
+
 - `by_class` index won't work on array field
 - Search index with `classes` in filterFields may not work with array
 - Missing combined indexes for common filter combinations
 
 **Recommended Indexes** (with denormalization):
+
 ```typescript
 .index("by_slug", ["slug"])
 .index("by_tier", ["tier"])
@@ -268,6 +292,7 @@ Proposed indexes:
 ```
 
 **LOW - Duration/Range Standardization**
+
 - **Observation**: `duration` and `range` are free-form strings
 - **Data Samples**: "Focus", "Instant", "5 rounds", "1 hour real time", "1d8 days"
 - **Filtering Challenge**: "5 rounds" vs "10 rounds" - how to group "rounds" durations?
@@ -280,11 +305,12 @@ Proposed indexes:
 ### 1.3 Favorites Schema (Milestone 3.1)
 
 #### Proposed Schema
+
 ```typescript
 favorites: defineTable({
-  userId: v.id("users"),
-  itemType: v.union(v.literal("monster"), v.literal("spell")),
-  itemId: v.id("monsters" | "spells"), // Need to handle union types
+  userId: v.id('users'),
+  itemType: v.union(v.literal('monster'), v.literal('spell')),
+  itemId: v.id('monsters' | 'spells'), // Need to handle union types
   itemSlug: v.string(),
   itemName: v.string(),
   addedAt: v.number(),
@@ -295,16 +321,18 @@ favorites: defineTable({
 #### Issues Identified
 
 **CRITICAL - Invalid Union ID Type**
+
 - **Issue**: `v.id("monsters" | "spells")` is invalid syntax
 - **Convex Reality**: Cannot have union of ID types
 - **Impact**: Schema will fail to compile
 - **Fix Required**: Remove `itemId` or use string for flexibility:
 
   **Option A - Remove itemId (Recommended)**:
+
   ```typescript
   favorites: defineTable({
-    userId: v.id("users"),
-    itemType: v.union(v.literal("monster"), v.literal("spell")),
+    userId: v.id('users'),
+    itemType: v.union(v.literal('monster'), v.literal('spell')),
     // itemId removed - use itemSlug for lookups
     itemSlug: v.string(),
     itemName: v.string(), // Denormalized for display
@@ -314,6 +342,7 @@ favorites: defineTable({
   ```
 
   **Option B - Store as string**:
+
   ```typescript
   itemId: v.string(), // Store _id.toString(), cast back when needed
   ```
@@ -321,6 +350,7 @@ favorites: defineTable({
   **Recommendation**: **Option A** - use `itemSlug` for lookups, it's already in the schema and more stable than IDs for this use case.
 
 **HIGH - Timestamp Type**
+
 - **Issue**: `addedAt: v.number()` assumes Unix timestamp in milliseconds
 - **Best Practice**: Convex provides `v.number()` for timestamps, but consider using `_creationTime` system field
 - **Recommendation**:
@@ -333,6 +363,7 @@ favorites: defineTable({
 **MEDIUM - Index Strategy**
 
 Proposed indexes:
+
 ```typescript
 .index("by_userId_and_type", ["userId", "itemType"])
 .index("by_userId_and_itemSlug", ["userId", "itemSlug"])
@@ -340,11 +371,13 @@ Proposed indexes:
 ```
 
 **Analysis**:
+
 - ✅ `by_userId_and_type` - good for filtering favorites by type
 - ✅ `by_userId_and_itemSlug` - good for checking if item is favorited
 - ⚠️ `by_userId` - redundant if we have `by_userId_and_type`
 
 **Recommendation**:
+
 ```typescript
 .index("by_userId", ["userId"]) // All favorites
 .index("by_userId_and_type", ["userId", "itemType"]) // Filtered by type
@@ -354,37 +387,41 @@ Proposed indexes:
 Keep all three - they serve distinct query patterns and Convex indexes are cheap.
 
 **MEDIUM - Duplicate Prevention**
+
 - **Requirement**: "Checks if already favorited"
 - **Implementation**: Mutation should use `by_userId_and_itemSlug` index
 - **Edge Case**: What if user tries to favorite same item twice? Update timestamp or return existing?
 - **Recommendation**: Make mutation idempotent - return existing favorite if already exists:
+
   ```typescript
   const existing = await ctx.db
-    .query("favorites")
-    .withIndex("by_userId_and_itemSlug", (q) =>
-      q.eq("userId", userId).eq("itemSlug", args.itemSlug)
+    .query('favorites')
+    .withIndex('by_userId_and_itemSlug', (q) =>
+      q.eq('userId', userId).eq('itemSlug', args.itemSlug),
     )
-    .first();
+    .first()
 
-  if (existing) return existing._id; // Already favorited
+  if (existing) return existing._id // Already favorited
   ```
 
 ### 1.4 UserProfile Schema (Already Implemented)
 
 #### Current Schema
+
 ```typescript
 userProfiles: defineTable({
-  userId: v.id("users"),
+  userId: v.id('users'),
   displayName: v.string(),
   avatarUrl: v.optional(v.string()),
   favoriteTablesPreferences: v.optional(v.any()),
   themePreference: v.optional(v.string()),
-}).index("by_userId", ["userId"])
+}).index('by_userId', ['userId'])
 ```
 
 #### Issues Identified
 
 **MEDIUM - Use of `v.any()`**
+
 - **Issue**: `favoriteTablesPreferences: v.optional(v.any())`
 - **Impact**: Type safety lost, unclear what data structure to expect
 - **Recommendation**: Define specific type based on actual use case:
@@ -399,6 +436,7 @@ userProfiles: defineTable({
   ```
 
 **LOW - Missing Fields**
+
 - Spec mentions `viewModePreference` and `favoriteFilters` but schema has generic `favoriteTablesPreferences`
 - **Recommendation**: Define specific fields as needed:
   ```typescript
@@ -413,29 +451,31 @@ userProfiles: defineTable({
 ### 1.5 Collections Schema (Milestone 5.2)
 
 #### Proposed Schema
+
 ```typescript
 collections: defineTable({
-  userId: v.id("users"),
+  userId: v.id('users'),
   name: v.string(),
   description: v.optional(v.string()),
   createdAt: v.number(),
   updatedAt: v.number(),
   isPublic: v.boolean(),
-}).index("by_userId", ["userId"])
+}).index('by_userId', ['userId'])
 
 collectionItems: defineTable({
-  collectionId: v.id("collections"),
-  itemType: v.union(v.literal("monster"), v.literal("spell")),
+  collectionId: v.id('collections'),
+  itemType: v.union(v.literal('monster'), v.literal('spell')),
   itemSlug: v.string(),
   itemName: v.string(),
   addedAt: v.number(),
   order: v.number(),
-}).index("by_collectionId", ["collectionId"])
+}).index('by_collectionId', ['collectionId'])
 ```
 
 #### Issues Identified
 
 **MEDIUM - Redundant Timestamps**
+
 - **Issue**: `createdAt` and `updatedAt` when system `_creationTime` exists
 - **Recommendation**: Use `_creationTime` for creation, only add `updatedAt` if needed:
   ```typescript
@@ -447,6 +487,7 @@ collectionItems: defineTable({
   ```
 
 **LOW - Missing Index for Public Collections**
+
 - If `isPublic` collections can be browsed, need index:
   ```typescript
   .index("by_userId", ["userId"])
@@ -454,6 +495,7 @@ collectionItems: defineTable({
   ```
 
 **LOW - CollectionItems Order Field**
+
 - **Good**: `order` field for manual sorting
 - **Consideration**: What happens when items are deleted? Gaps in order?
 - **Recommendation**: Use floating-point numbers for easy reordering without renumbering:
@@ -464,18 +506,20 @@ collectionItems: defineTable({
 ### 1.6 Recent Views Schema (Milestone 5.4)
 
 #### Proposed Schema
+
 ```typescript
 recentViews: defineTable({
-  userId: v.id("users"),
-  itemType: v.union(v.literal("monster"), v.literal("spell")),
+  userId: v.id('users'),
+  itemType: v.union(v.literal('monster'), v.literal('spell')),
   itemSlug: v.string(),
   viewedAt: v.number(),
-}).index("by_userId", ["userId"])
+}).index('by_userId', ['userId'])
 ```
 
 #### Issues Identified
 
 **HIGH - Duplicate Entries**
+
 - **Issue**: "Duplicate recent views update timestamp" requirement
 - **Index Needed**: To find existing view to update:
   ```typescript
@@ -484,25 +528,28 @@ recentViews: defineTable({
   ```
 
 **MEDIUM - Cleanup Strategy**
+
 - **Issue**: "Returns last 20 views" but no cleanup of old entries
 - **Impact**: Table will grow indefinitely
 - **Recommendation**: Add cleanup in mutation or scheduled function:
+
   ```typescript
   // In recordView mutation, delete entries beyond 20
   const views = await ctx.db
-    .query("recentViews")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .order("desc")
-    .collect();
+    .query('recentViews')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .order('desc')
+    .collect()
 
   if (views.length > 20) {
     for (const view of views.slice(20)) {
-      await ctx.db.delete(view._id);
+      await ctx.db.delete(view._id)
     }
   }
   ```
 
-**LOW - Timestamp vs _creationTime**
+**LOW - Timestamp vs \_creationTime**
+
 - `viewedAt` makes sense here since views get updated
 - Keep as-is
 
@@ -513,6 +560,7 @@ recentViews: defineTable({
 ### 2.1 Search Implementation
 
 #### Proposed Approach
+
 - Use Convex search indexes on `name` fields
 - Filter by level, alignment, tier, class using search index `filterFields`
 - Target: < 500ms search results
@@ -522,6 +570,7 @@ recentViews: defineTable({
 **MEDIUM-HIGH CONCERN - Search Index Limitations**
 
 Convex search indexes have specific constraints:
+
 1. **Single search field**: Can only full-text search on one field (name)
 2. **Filter fields**: Can use indexed fields to narrow results, but:
    - Array fields (spell classes) may not work efficiently in search indexes
@@ -531,6 +580,7 @@ Convex search indexes have specific constraints:
    - "Optionally search in descriptions and trait names" is NOT feasible with proposed schema
 
 **Concerns**:
+
 - ❌ Cannot efficiently search trait names without denormalization
 - ⚠️ Array field filtering in search index untested
 - ⚠️ Multi-field search (name + description) not supported by single search index
@@ -538,11 +588,13 @@ Convex search indexes have specific constraints:
 **Recommendations**:
 
 **For MVP (Milestones 1-3)**:
+
 - ✅ Use search index for name-only search - will work well
 - ✅ Apply filters after search using query filters - acceptable for small dataset
 - ⚠️ Set realistic expectations: < 500ms is achievable, but not for all filter combinations
 
 **For Advanced Search (Milestone 5.1)**:
+
 - Denormalize searchable content into single field:
   ```typescript
   name: v.string(),
@@ -553,6 +605,7 @@ Convex search indexes have specific constraints:
 - Note: This increases storage and seeding complexity
 
 **Alternative Approach**:
+
 - For 649 monsters, consider loading all into browser and using client-side search (Fuse.js, etc.)
 - Pros: More flexible search, can search any field, better highlighting
 - Cons: Initial load time, not suitable if dataset grows significantly
@@ -561,17 +614,20 @@ Convex search indexes have specific constraints:
 ### 2.2 Real-time Subscriptions
 
 #### Consideration
+
 Convex automatically provides real-time subscriptions for all queries.
 
 #### Concerns
 
 **LOW - Subscription Costs**
+
 - **Issue**: Every component using `useSuspenseQuery(convexQuery(...))` creates a live subscription
 - **Impact**: Multiple components subscribing to same data = multiple subscriptions
 - **Mitigation**: TanStack Query deduplicates queries with same key
 - **Verdict**: Should be fine, but monitor in production
 
 **LOW - Unnecessary Real-time Updates**
+
 - **Question**: Do browse pages need real-time updates?
 - **Scenario**: User browsing monsters when another user adds favorite
 - **Impact**: Minimal - favorites are user-specific
@@ -580,17 +636,20 @@ Convex automatically provides real-time subscriptions for all queries.
 ### 2.3 Pagination Strategy
 
 #### Proposed Approach
+
 - Cursor-based pagination for large result sets
 - Infinite scroll or pagination UI
 
 #### Issues Identified
 
 **HIGH - Undefined Implementation**
+
 - **Issue**: Spec mentions `cursor` parameter and `nextCursor` return value but no implementation details
 - **Convex Reality**: Use `.paginate()` API with `paginationOptsValidator`
 - **Correct Pattern**:
+
   ```typescript
-  import { paginationOptsValidator } from "convex/server";
+  import { paginationOptsValidator } from 'convex/server'
 
   export const listMonsters = query({
     args: {
@@ -599,28 +658,30 @@ Convex automatically provides real-time subscriptions for all queries.
     },
     handler: async (ctx, args) => {
       const results = await ctx.db
-        .query("monsters")
-        .paginate(args.paginationOpts);
+        .query('monsters')
+        .paginate(args.paginationOpts)
 
-      return results; // { page: Doc[], continueCursor, isDone }
+      return results // { page: Doc[], continueCursor, isDone }
     },
-  });
+  })
   ```
 
 **Recommendation**: Update spec to use Convex pagination API explicitly.
 
 **MEDIUM - Pagination with Search**
+
 - **Issue**: Combining search index with pagination is more complex
 - **Convex API**: Search results can be paginated, but:
   ```typescript
   const results = await ctx.db
-    .query("monsters")
-    .withSearchIndex("search_monsters", (q) => q.search("name", searchTerm))
-    .paginate(paginationOpts);
+    .query('monsters')
+    .withSearchIndex('search_monsters', (q) => q.search('name', searchTerm))
+    .paginate(paginationOpts)
   ```
 - **Verdict**: Supported, but spec should clarify this pattern
 
 **MEDIUM - Infinite Scroll vs Pagination**
+
 - **UX Question**: Which to implement?
 - **Infinite Scroll**: Better for mobile, browsing flow
 - **Pagination**: Better for jumping to specific pages, accessibility
@@ -630,59 +691,66 @@ Convex automatically provides real-time subscriptions for all queries.
 ### 2.4 Data Seeding
 
 #### Proposed Approach
+
 - One-time seeding operation via mutation
 - Idempotent (can run multiple times safely)
 
 #### Issues Identified
 
 **MEDIUM - Idempotency Strategy Undefined**
+
 - **Issue**: "Seeding is idempotent" requirement without implementation approach
 - **Options**:
 
   **Option A - Check and Skip**:
+
   ```typescript
-  const existing = await ctx.db.query("monsters").first();
+  const existing = await ctx.db.query('monsters').first()
   if (existing) {
-    console.log("Monsters already seeded");
-    return;
+    console.log('Monsters already seeded')
+    return
   }
   ```
 
   **Option B - Upsert by Slug**:
+
   ```typescript
   for (const monster of monstersData) {
     const existing = await ctx.db
-      .query("monsters")
-      .withIndex("by_slug", (q) => q.eq("slug", monster.slug))
-      .first();
+      .query('monsters')
+      .withIndex('by_slug', (q) => q.eq('slug', monster.slug))
+      .first()
 
     if (existing) {
-      await ctx.db.patch(existing._id, monster);
+      await ctx.db.patch(existing._id, monster)
     } else {
-      await ctx.db.insert("monsters", monster);
+      await ctx.db.insert('monsters', monster)
     }
   }
   ```
 
   **Option C - Clear and Reseed**:
+
   ```typescript
   // Delete all existing
-  const all = await ctx.db.query("monsters").collect();
+  const all = await ctx.db.query('monsters').collect()
   for (const doc of all) {
-    await ctx.db.delete(doc._id);
+    await ctx.db.delete(doc._id)
   }
   // Insert fresh
   for (const monster of monstersData) {
-    await ctx.db.insert("monsters", monster);
+    await ctx.db.insert('monsters', monster)
   }
   ```
 
 **Recommendation**:
+
 - For MVP: **Option A** (check and skip) - simplest, fastest
 - For development: **Option C** (clear and reseed) - ensures data is updated
 - Make it configurable: `seedMonsters({ force: boolean })`
 
 **LOW - Data Transformation**
+
 - **Issue**: JSON data may need transformation before insertion
 - **Examples**:
   - Convert spell tier from string to number
@@ -694,50 +762,60 @@ Convex automatically provides real-time subscriptions for all queries.
     return {
       ...raw,
       armor_type: raw.armor_type || undefined, // null -> undefined
-    };
+    }
   }
   ```
 
 **LOW - Bulk Insert Performance**
+
 - **Issue**: Inserting 649 monsters + 85 spells one-by-one
 - **Convex**: No bulk insert API, must insert individually
 - **Performance**: Should complete in seconds, acceptable for one-time operation
 - **Recommendation**: Add progress logging:
   ```typescript
-  console.log(`Seeding ${monstersData.length} monsters...`);
+  console.log(`Seeding ${monstersData.length} monsters...`)
   for (let i = 0; i < monstersData.length; i++) {
-    await ctx.db.insert("monsters", monstersData[i]);
-    if (i % 100 === 0) console.log(`  ${i}/${monstersData.length}`);
+    await ctx.db.insert('monsters', monstersData[i])
+    if (i % 100 === 0) console.log(`  ${i}/${monstersData.length}`)
   }
   ```
 
 ### 2.5 Optimistic Updates
 
 #### Proposed Approach
+
 - Optimistic updates for favorite button interactions
 
 #### Feasibility
 
 **✅ GOOD - Straightforward Implementation**
+
 - Convex + TanStack Query supports optimistic updates well
 - Pattern:
   ```typescript
-  const addFavorite = useMutation(api.favorites.add).withOptimisticUpdate((localStore, args) => {
-    // Update local cache immediately
-    const favorites = localStore.getQuery(api.favorites.list, { userId });
-    if (favorites) {
-      localStore.setQuery(api.favorites.list, { userId }, [...favorites, newFavorite]);
-    }
-  });
+  const addFavorite = useMutation(api.favorites.add).withOptimisticUpdate(
+    (localStore, args) => {
+      // Update local cache immediately
+      const favorites = localStore.getQuery(api.favorites.list, { userId })
+      if (favorites) {
+        localStore.setQuery(api.favorites.list, { userId }, [
+          ...favorites,
+          newFavorite,
+        ])
+      }
+    },
+  )
   ```
 
 **MEDIUM - Spec Should Clarify Pattern**
+
 - **Issue**: "Optimistic updates for instant feedback" mentioned but no implementation guidance
 - **Recommendation**: Add section on optimistic update pattern for developers
 
 ### 2.6 Performance Targets
 
 #### Stated Targets
+
 - First Contentful Paint < 1.5s
 - Search results < 500ms
 - Detail page navigation < 300ms
@@ -746,11 +824,13 @@ Convex automatically provides real-time subscriptions for all queries.
 #### Feasibility Analysis
 
 **✅ ACHIEVABLE - FCP < 1.5s**
+
 - TanStack Start with SSR supports this
 - Small dataset (< 1MB total) helps
 - Recommendation: Ensure proper code splitting
 
 **⚠️ CHALLENGING - Search < 500ms**
+
 - Depends on:
   - Convex query performance (usually 50-150ms)
   - Network latency (varies by location)
@@ -760,11 +840,13 @@ Convex automatically provides real-time subscriptions for all queries.
 - **Recommendation**: Set target as "p95 < 500ms" not absolute
 
 **✅ ACHIEVABLE - Detail page < 300ms**
+
 - Single query by slug with index: very fast (< 50ms)
 - Main factor: Network latency + rendering
 - Recommendation: Implement prefetching on hover
 
 **⚠️ OPTIMISTIC - Lighthouse > 90**
+
 - Achievable, but requires:
   - Proper image optimization (no images in spec?)
   - Code splitting by route
@@ -781,19 +863,23 @@ Convex automatically provides real-time subscriptions for all queries.
 #### Proposed Components
 
 **Monsters**:
+
 - `MonsterCard`, `MonsterFilters`, `SearchBar`, `MonsterGrid`
 - `MonsterStatBlock`, `TraitList`, `FavoriteButton`, `MonsterNavigation`
 
 **Spells**:
+
 - `SpellCard`, `SpellFilters`, `SpellGrid`
 - `SpellDetailCard`, `FavoriteButton`, `SpellNavigation`
 
 **Favorites**:
+
 - `FavoritesList`, `FavoriteItemCard`, `FavoriteNotes`, `EmptyFavoritesState`
 
 #### Issues Identified
 
 **MEDIUM - Component Reusability**
+
 - **Observation**: `SearchBar` is marked as reusable but filters are separate
 - **Issue**: Monsters and Spells have separate filter components despite similar patterns
 - **Recommendation**: Create composable filter system:
@@ -809,6 +895,7 @@ Convex automatically provides real-time subscriptions for all queries.
   ```
 
 **LOW - Missing Composition Patterns**
+
 - **Issue**: Spec doesn't specify how components compose
 - **Example**: Is `MonsterCard` used in both browse and favorites? Should be.
 - **Recommendation**: Create hierarchy diagram:
@@ -821,6 +908,7 @@ Convex automatically provides real-time subscriptions for all queries.
   ```
 
 **LOW - Layout Components Missing**
+
 - **Issue**: No mention of layout components
 - **Needed**: `BrowserLayout`, `DetailLayout`, `EmptyState`, `ErrorBoundary`
 - **Recommendation**: Add to component list
@@ -828,6 +916,7 @@ Convex automatically provides real-time subscriptions for all queries.
 ### 3.2 State Management
 
 #### Proposed Approach
+
 - Server state: Convex + TanStack Query
 - Client state: React hooks
 - URL state: TanStack Router search params
@@ -836,6 +925,7 @@ Convex automatically provides real-time subscriptions for all queries.
 #### Issues Identified
 
 **HIGH - URL State Complexity**
+
 - **Issue**: Complex filter combinations in URL
 - **Example**: `/monsters?level=1,2,3&alignment=L,N&search=dragon`
 - **Concerns**:
@@ -845,40 +935,44 @@ Convex automatically provides real-time subscriptions for all queries.
   - Back/forward button behavior
 
 **Recommendation**: Use TanStack Router's search param validation:
+
 ```typescript
 const monsterSearchSchema = z.object({
   q: z.string().optional(),
   level: z.array(z.number()).optional(),
-  alignment: z.array(z.enum(["L", "N", "C"])).optional(),
-});
+  alignment: z.array(z.enum(['L', 'N', 'C'])).optional(),
+})
 
 // In route definition
-export const Route = createFileRoute("/monsters/")({
+export const Route = createFileRoute('/monsters/')({
   validateSearch: (search) => monsterSearchSchema.parse(search),
-});
+})
 ```
 
 **MEDIUM - Filter State Sync**
+
 - **Issue**: Keeping URL, UI, and query in sync
 - **Challenge**: User changes filter → Update URL → Parse URL → Update query
 - **Recommendation**: Single source of truth pattern:
+
   ```typescript
   // URL is source of truth
-  const { q, level, alignment } = Route.useSearch();
+  const { q, level, alignment } = Route.useSearch()
 
   // Query directly from URL params
   const { data } = useSuspenseQuery(
-    convexQuery(api.monsters.list, { search: q, level, alignment })
-  );
+    convexQuery(api.monsters.list, { search: q, level, alignment }),
+  )
 
   // UI updates URL
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const updateFilters = (newFilters) => {
-    navigate({ search: (prev) => ({ ...prev, ...newFilters }) });
-  };
+    navigate({ search: (prev) => ({ ...prev, ...newFilters }) })
+  }
   ```
 
 **LOW - Local Storage Conflicts**
+
 - **Issue**: Multiple browser tabs could have conflicting preferences
 - **Impact**: Minimal for view mode preference
 - **Recommendation**: Use `storage` event listener to sync across tabs if needed
@@ -886,15 +980,17 @@ export const Route = createFileRoute("/monsters/")({
 ### 3.3 Data Fetching Patterns
 
 #### Proposed Pattern
+
 ```typescript
 const { data } = useSuspenseQuery(
-  convexQuery(api.myFunctions.listNumbers, { count: 10 })
-);
+  convexQuery(api.myFunctions.listNumbers, { count: 10 }),
+)
 ```
 
 #### Issues Identified
 
 **MEDIUM - Error Boundary Strategy**
+
 - **Issue**: `useSuspenseQuery` throws on error, needs error boundary
 - **Spec mentions**: "Error boundaries for route-level errors"
 - **Question**: What granularity? Per-route? Per-component?
@@ -909,6 +1005,7 @@ const { data } = useSuspenseQuery(
     ```
 
 **MEDIUM - Loading State Strategy**
+
 - **Issue**: Spec mentions "skeleton screens" but `useSuspenseQuery` uses Suspense boundaries
 - **Clarification Needed**:
   - Skeleton screens rendered by Suspense fallback?
@@ -921,6 +1018,7 @@ const { data } = useSuspenseQuery(
   ```
 
 **LOW - Query Key Strategy**
+
 - **Issue**: TanStack Query requires consistent query keys
 - **Convex Integration**: `convexQuery()` generates keys automatically
 - **Verdict**: Should work well, no action needed
@@ -928,6 +1026,7 @@ const { data } = useSuspenseQuery(
 ### 3.4 Route Structure
 
 #### Proposed Routes
+
 - `/` - Home
 - `/monsters` - Monster browser
 - `/monsters/:slug` - Monster detail
@@ -939,6 +1038,7 @@ const { data } = useSuspenseQuery(
 #### Issues Identified
 
 **LOW - File Structure Mismatch**
+
 - **Spec uses**: `/monsters/:slug`
 - **TanStack Start pattern**: `$slug` (e.g., `src/routes/monsters/$slug.tsx`)
 - **Clarification**: Spec is describing URL, file should use `$slug`
@@ -949,20 +1049,22 @@ const { data } = useSuspenseQuery(
   ```
 
 **LOW - Protected Route Pattern**
+
 - **Spec states**: "Protected route (requires authentication)" for `/favorites`
 - **Implementation**: Use route `beforeLoad` hook:
   ```typescript
-  export const Route = createFileRoute("/favorites/")({
+  export const Route = createFileRoute('/favorites/')({
     beforeLoad: ({ context }) => {
       if (!context.auth.isAuthenticated) {
-        throw redirect({ to: "/", search: { login: true } });
+        throw redirect({ to: '/', search: { login: true } })
       }
     },
-  });
+  })
   ```
 - **Recommendation**: Add pattern to spec
 
 **LOW - 404 Handling**
+
 - **Spec mentions**: "404 page for invalid slugs"
 - **Implementation**:
   - TanStack Router has built-in 404 handling
@@ -979,6 +1081,7 @@ const { data } = useSuspenseQuery(
 #### Missing Query/Mutation Definitions
 
 **Monsters**:
+
 - ✅ `listMonsters` - defined
 - ✅ `getMonsterBySlug` - defined
 - ✅ `getMonsterStats` - defined
@@ -992,6 +1095,7 @@ const { data } = useSuspenseQuery(
   - Returns: `{ count: number }`
 
 **Spells**:
+
 - ✅ `listSpells` - defined
 - ✅ `getSpellBySlug` - defined
 - ✅ `getSpellStats` - defined
@@ -999,6 +1103,7 @@ const { data } = useSuspenseQuery(
 - ❌ `seedSpells` - missing signature
 
 **Favorites**:
+
 - ✅ `addFavorite` - defined
 - ✅ `removeFavorite` - defined
 - ✅ `updateFavoriteNotes` - defined
@@ -1008,6 +1113,7 @@ const { data } = useSuspenseQuery(
   - **Issue**: Joining with union types (monsters OR spells)
   - **Implementation Challenge**: Need to fetch from two tables
   - **Pattern**:
+
     ```typescript
     export const getFavoritesWithDetails = query({
       args: { itemType: v.optional(...) },
@@ -1031,15 +1137,18 @@ const { data } = useSuspenseQuery(
       },
     });
     ```
+
   - **Performance Concern**: N+1 query problem for large favorites lists
   - **Recommendation**: Acceptable for MVP (< 100 favorites expected), optimize later
 
 **User Profiles**:
+
 - ❌ `getUserProfile` - needed
 - ❌ `updateUserProfile` - needed
 - ❌ `createUserProfile` - needed (or auto-create on first auth)
 
 **Collections** (Milestone 5):
+
 - Multiple mutations needed: create, update, delete, addItem, removeItem, reorderItems
 - Not critical for MVP
 
@@ -1048,6 +1157,7 @@ const { data } = useSuspenseQuery(
 #### Missing Specifications
 
 **User Profile Creation**:
+
 - **Question**: When is user profile created?
 - **Options**:
   - On first login (recommended)
@@ -1055,11 +1165,13 @@ const { data } = useSuspenseQuery(
 - **Recommendation**: Auto-create on first login using Convex Auth hooks
 
 **Favorite Button for Non-Authenticated**:
+
 - **Spec states**: "Prompted to log in"
 - **Implementation**: Modal? Redirect? Toast notification?
 - **Recommendation**: Modal with "Log in to save favorites" message
 
 **Session Expiry**:
+
 - **Missing**: What happens if user's session expires while on favorites page?
 - **Recommendation**: Redirect to home with login prompt
 
@@ -1068,11 +1180,13 @@ const { data } = useSuspenseQuery(
 #### Missing Validation Specs
 
 **Frontend Validation**:
+
 - ❌ Search input validation (max length, allowed characters)
 - ❌ Filter value validation (level range, etc.)
 - ❌ Notes field validation (max length in favorites)
 
 **Backend Validation**:
+
 - ❌ Convex mutations should validate all inputs
 - **Example**: `addFavorite` should validate:
   - User is authenticated
@@ -1085,36 +1199,42 @@ const { data } = useSuspenseQuery(
 #### SSR Requirements
 
 **TanStack Start SSR**:
+
 - ✅ Supports SSR out of the box
 - ⚠️ **Issue**: Convex queries on server need special handling
 - **Implementation**:
   ```typescript
   // In route loader
-  export const Route = createFileRoute("/monsters/$slug")({
+  export const Route = createFileRoute('/monsters/$slug')({
     loader: async ({ params }) => {
       // Fetch data server-side for SEO
-      const monster = await api.monsters.getBySlug({ slug: params.slug });
-      return { monster };
+      const monster = await api.monsters.getBySlug({ slug: params.slug })
+      return { monster }
     },
-  });
+  })
   ```
 
 **Meta Tags**:
+
 - **Spec defines**: Title, description, Open Graph for each page type
 - **Implementation**: Use TanStack Router's `head` export:
   ```typescript
-  export const Route = createFileRoute("/monsters/$slug")({
+  export const Route = createFileRoute('/monsters/$slug')({
     head: ({ loaderData }) => ({
       title: `${loaderData.monster.name} - Level ${loaderData.monster.level} Monster | Shadowdark GM Tools`,
       meta: [
-        { name: "description", content: loaderData.monster.description.slice(0, 150) },
+        {
+          name: 'description',
+          content: loaderData.monster.description.slice(0, 150),
+        },
         // ... Open Graph tags
       ],
     }),
-  });
+  })
   ```
 
 **Sitemap Generation**:
+
 - **Spec mentions**: "Sitemap.xml with all monsters and spells"
 - **Missing**: Implementation approach
 - **Recommendation**:
@@ -1125,6 +1245,7 @@ const { data } = useSuspenseQuery(
 ### 4.5 Error Messages & Empty States
 
 #### Specified States
+
 - No search results
 - No favorites
 - Failed data loads
@@ -1132,25 +1253,29 @@ const { data } = useSuspenseQuery(
 #### Missing Specifications
 
 **Network Errors**:
+
 - What message for "Failed to connect to Convex"?
 - Retry button behavior?
 
 **Invalid Data**:
+
 - What if monster slug exists but data is corrupted?
 - Fallback rendering?
 
 **Rate Limiting**:
+
 - Does Convex have rate limits?
 - How to handle if exceeded?
 
 **Recommendation**: Add comprehensive error message map:
+
 ```typescript
 const ERROR_MESSAGES = {
-  NETWORK_ERROR: "Unable to connect. Please check your internet connection.",
-  NOT_FOUND: "The requested {item} could not be found.",
-  AUTH_REQUIRED: "Please log in to access this feature.",
+  NETWORK_ERROR: 'Unable to connect. Please check your internet connection.',
+  NOT_FOUND: 'The requested {item} could not be found.',
+  AUTH_REQUIRED: 'Please log in to access this feature.',
   // etc.
-};
+}
 ```
 
 ---
@@ -1169,17 +1294,20 @@ const ERROR_MESSAGES = {
 The proposed search implementation combines full-text search with multiple filter dimensions (level, alignment, class, tier, range, duration). Convex search indexes support `filterFields`, but performance with multiple active filters is uncertain.
 
 **Specific Concerns**:
+
 1. Search + level range + alignment = 3 filter dimensions
 2. Spell class filtering on array field may not work efficiently
 3. "Search in descriptions and traits" is not supported without denormalization
 
 **Mitigation Strategies**:
+
 1. **Prototype early** (before Milestone 1.2): Test search performance with realistic filter combinations
 2. **Set realistic expectations**: < 500ms for simple search, may be slower for complex filters
 3. **Fallback plan**: If search index doesn't perform, query all items and filter client-side (acceptable for 649+85 items)
 4. **Progressive enhancement**: Start with name-only search, add description/trait search in Phase 2 with denormalization
 
 **Success Criteria**:
+
 - 95% of searches complete in < 500ms
 - All searches complete in < 2s
 - User feedback indicates search is "fast"
@@ -1194,17 +1322,20 @@ The proposed search implementation combines full-text search with multiple filte
 `getFavoritesWithDetails` query has N+1 query problem - fetches favorite records then individually fetches each monster/spell detail.
 
 **Specific Concerns**:
+
 1. User with 50 favorites = 1 favorites query + 50 detail queries
 2. Convex allows parallel queries, but still significant overhead
 3. Could hit Convex function execution time limits
 
 **Mitigation Strategies**:
+
 1. **Set expectations**: Document in spec that large favorite lists (> 100) may be slow
 2. **Denormalize critical fields**: Store name, level, tier in favorites table to avoid join for list view
 3. **Pagination**: Limit favorites list to 20-50 items per page
 4. **Future optimization**: Convex team may add bulk query APIs
 
 **Success Criteria**:
+
 - Favorites page loads in < 1s for 20 favorites
 - Favorites page loads in < 3s for 100 favorites
 
@@ -1218,12 +1349,14 @@ The proposed search implementation combines full-text search with multiple filte
 Managing filter state in URL with type-safe parsing, validation, and sync with UI is complex and error-prone.
 
 **Specific Concerns**:
+
 1. Invalid URL params could crash page
 2. Back/forward button may not work as expected
 3. Sharing URLs with filters may produce unexpected results
 4. Race conditions between URL updates and query execution
 
 **Mitigation Strategies**:
+
 1. **Use TanStack Router's validation**: Leverage built-in search param validation
 2. **Default values**: Provide sensible defaults for all filter params
 3. **Error handling**: Catch invalid params and reset to defaults
@@ -1231,6 +1364,7 @@ Managing filter state in URL with type-safe parsing, validation, and sync with U
 5. **User feedback**: Clear indication when filters are applied
 
 **Success Criteria**:
+
 - No crashes from invalid URLs
 - Back/forward buttons work correctly
 - Shared URLs produce consistent results
@@ -1247,6 +1381,7 @@ Managing filter state in URL with type-safe parsing, validation, and sync with U
 Spec emphasizes mobile usage but design details are minimal.
 
 **Mitigation**:
+
 - Mobile-first design approach
 - Test on real devices early
 - Use touch-friendly component library (shadcn/ui already touch-friendly)
@@ -1260,6 +1395,7 @@ Spec emphasizes mobile usage but design details are minimal.
 "Print-friendly CSS" mentioned but no specific requirements.
 
 **Mitigation**:
+
 - Defer to Milestone 4 or 5
 - Use simple print stylesheet
 - Test with browser print preview
@@ -1284,10 +1420,12 @@ Milestone 3.3 (Favorites Page)
 ```
 
 **Parallel Tracks**:
+
 - Milestone 2 (Spells) can start after 1.1 is complete
 - Milestone 4 (Polish) can be done in parallel with 1-3
 
 **Recommendation**: Start with 1.1, then split team:
+
 - Track A: Monsters (1.2, 1.3, 1.4)
 - Track B: Spells (2.1, 2.2, 2.3, 2.4)
 - Converge on Milestone 3 (Favorites)
@@ -1301,6 +1439,7 @@ Milestone 3.3 (Favorites Page)
 **Priority 1 (Fix Before Implementation)**:
 
 1. **Monster Schema**:
+
    ```typescript
    monsters: defineTable({
      name: v.string(),
@@ -1320,22 +1459,25 @@ Milestone 3.3 (Favorites Page)
      charisma: v.number(),
      alignment: v.string(),
      level: v.number(),
-     traits: v.array(v.object({
-       name: v.string(),
-       description: v.string(),
-     })),
+     traits: v.array(
+       v.object({
+         name: v.string(),
+         description: v.string(),
+       }),
+     ),
    })
-     .index("by_slug", ["slug"])
-     .index("by_level", ["level"])
-     .index("by_alignment", ["alignment"])
-     .index("by_level_and_alignment", ["level", "alignment"]) // ADD: Combined filter
-     .searchIndex("search_monsters", {
-       searchField: "name",
-       filterFields: ["level", "alignment"]
+     .index('by_slug', ['slug'])
+     .index('by_level', ['level'])
+     .index('by_alignment', ['alignment'])
+     .index('by_level_and_alignment', ['level', 'alignment']) // ADD: Combined filter
+     .searchIndex('search_monsters', {
+       searchField: 'name',
+       filterFields: ['level', 'alignment'],
      })
    ```
 
 2. **Spell Schema**:
+
    ```typescript
    spells: defineTable({
      name: v.string(),
@@ -1349,31 +1491,31 @@ Milestone 3.3 (Favorites Page)
      range: v.string(),
      tier: v.number(), // FIX: was v.string(), convert to number
    })
-     .index("by_slug", ["slug"])
-     .index("by_tier", ["tier"])
-     .index("by_tier_and_wizard", ["tier", "isWizardSpell"]) // ADD
-     .index("by_tier_and_priest", ["tier", "isPriestSpell"]) // ADD
-     .index("by_range", ["range"]) // ADD
-     .searchIndex("search_spells", {
-       searchField: "name",
-       filterFields: ["tier", "isWizardSpell", "isPriestSpell", "range"]
+     .index('by_slug', ['slug'])
+     .index('by_tier', ['tier'])
+     .index('by_tier_and_wizard', ['tier', 'isWizardSpell']) // ADD
+     .index('by_tier_and_priest', ['tier', 'isPriestSpell']) // ADD
+     .index('by_range', ['range']) // ADD
+     .searchIndex('search_spells', {
+       searchField: 'name',
+       filterFields: ['tier', 'isWizardSpell', 'isPriestSpell', 'range'],
      })
    ```
 
 3. **Favorites Schema**:
    ```typescript
    favorites: defineTable({
-     userId: v.id("users"),
-     itemType: v.union(v.literal("monster"), v.literal("spell")),
+     userId: v.id('users'),
+     itemType: v.union(v.literal('monster'), v.literal('spell')),
      // REMOVE: itemId (can't have union of ID types)
      itemSlug: v.string(),
      itemName: v.string(), // Denormalized for display
      // REMOVE: addedAt (use _creationTime instead)
      notes: v.optional(v.string()),
    })
-     .index("by_userId", ["userId"])
-     .index("by_userId_and_type", ["userId", "itemType"])
-     .index("by_userId_and_itemSlug", ["userId", "itemSlug"])
+     .index('by_userId', ['userId'])
+     .index('by_userId_and_type', ['userId', 'itemType'])
+     .index('by_userId_and_itemSlug', ['userId', 'itemSlug'])
    ```
 
 ### 6.2 Additional Queries/Mutations Needed
@@ -1388,8 +1530,10 @@ export const seedMonsters = internalMutation({
     force: v.optional(v.boolean()),
   },
   returns: v.object({ count: v.number() }),
-  handler: async (ctx, args) => { /* ... */ },
-});
+  handler: async (ctx, args) => {
+    /* ... */
+  },
+})
 
 export const listMonsters = query({
   args: {
@@ -1404,50 +1548,56 @@ export const listMonsters = query({
     continueCursor: v.string(),
     isDone: v.boolean(),
   }),
-  handler: async (ctx, args) => { /* ... */ },
-});
+  handler: async (ctx, args) => {
+    /* ... */
+  },
+})
 
 // Similar for spells.ts
 
 // favorites.ts
 export const getFavoritesWithDetails = query({
   args: {
-    itemType: v.optional(v.union(v.literal("monster"), v.literal("spell"))),
+    itemType: v.optional(v.union(v.literal('monster'), v.literal('spell'))),
   },
-  returns: v.array(v.object({
-    _id: v.id("favorites"),
-    userId: v.id("users"),
-    itemType: v.union(v.literal("monster"), v.literal("spell")),
-    itemSlug: v.string(),
-    itemName: v.string(),
-    notes: v.optional(v.string()),
-    itemDetails: v.optional(v.any()), // Monster | Spell | null
-  })),
-  handler: async (ctx, args) => { /* ... */ },
-});
+  returns: v.array(
+    v.object({
+      _id: v.id('favorites'),
+      userId: v.id('users'),
+      itemType: v.union(v.literal('monster'), v.literal('spell')),
+      itemSlug: v.string(),
+      itemName: v.string(),
+      notes: v.optional(v.string()),
+      itemDetails: v.optional(v.any()), // Monster | Spell | null
+    }),
+  ),
+  handler: async (ctx, args) => {
+    /* ... */
+  },
+})
 
 // userProfiles.ts
 export const getOrCreateProfile = mutation({
   args: {},
-  returns: v.id("userProfiles"),
+  returns: v.id('userProfiles'),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Not authenticated')
 
     const existing = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .first();
+      .query('userProfiles')
+      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .first()
 
-    if (existing) return existing._id;
+    if (existing) return existing._id
 
-    return await ctx.db.insert("userProfiles", {
+    return await ctx.db.insert('userProfiles', {
       userId: identity.subject,
-      displayName: identity.name || "User",
+      displayName: identity.name || 'User',
       avatarUrl: identity.pictureUrl,
-    });
+    })
   },
-});
+})
 ```
 
 ### 6.3 Alternative Approaches
@@ -1458,11 +1608,13 @@ export const getOrCreateProfile = mutation({
 **Alternative**: Load all data to client, use Fuse.js or similar
 
 **Pros**:
+
 - More flexible search (fuzzy matching, multi-field, highlights)
 - No backend search index limitations
 - Instant results (no network latency)
 
 **Cons**:
+
 - Initial load time (649 monsters = ~500KB JSON)
 - No real-time updates from server
 - Doesn't scale if dataset grows
@@ -1475,11 +1627,13 @@ export const getOrCreateProfile = mutation({
 **Alternative**: Combine into single "Collections" feature where favorites are just a default collection
 
 **Pros**:
+
 - Single unified system
 - Less duplication
 - More powerful from start
 
 **Cons**:
+
 - More complex MVP
 - Slower time to initial release
 
@@ -1491,11 +1645,13 @@ export const getOrCreateProfile = mutation({
 **Alternative**: Generate static HTML for all monsters/spells at build time
 
 **Pros**:
+
 - Fastest possible load times
 - Cheapest hosting (no server)
 - Better SEO
 
 **Cons**:
+
 - No real-time features
 - Favorites require auth backend anyway
 - Rebuilds needed for data updates
@@ -1646,30 +1802,33 @@ export const getOrCreateProfile = mutation({
 
 ### Risk Matrix
 
-| Feature | Likelihood | Impact | Risk Level | Mitigation Priority |
-|---------|-----------|--------|------------|-------------------|
-| Search performance | Medium | High | **HIGH** | Prototype first |
-| Schema type errors | High | High | **CRITICAL** | Fix immediately |
-| Favorites query N+1 | Medium | Medium | **MEDIUM** | Optimize in M3 |
-| URL state complexity | High | Medium | **MEDIUM** | Define pattern early |
-| Array field filtering | Medium | High | **HIGH** | Use denormalization |
-| Pagination implementation | Low | Medium | **LOW** | Follow Convex docs |
-| Mobile responsiveness | Medium | High | **MEDIUM** | Test early, often |
-| Print functionality | Low | Low | **LOW** | Defer to Phase 2 |
+| Feature                   | Likelihood | Impact | Risk Level   | Mitigation Priority  |
+| ------------------------- | ---------- | ------ | ------------ | -------------------- |
+| Search performance        | Medium     | High   | **HIGH**     | Prototype first      |
+| Schema type errors        | High       | High   | **CRITICAL** | Fix immediately      |
+| Favorites query N+1       | Medium     | Medium | **MEDIUM**   | Optimize in M3       |
+| URL state complexity      | High       | Medium | **MEDIUM**   | Define pattern early |
+| Array field filtering     | Medium     | High   | **HIGH**     | Use denormalization  |
+| Pagination implementation | Low        | Medium | **LOW**      | Follow Convex docs   |
+| Mobile responsiveness     | Medium     | High   | **MEDIUM**   | Test early, often    |
+| Print functionality       | Low        | Low    | **LOW**      | Defer to Phase 2     |
 
 ### Overall Risk Assessment
 
 **Technical Risk**: **MEDIUM-HIGH**
+
 - Several critical schema issues that must be fixed
 - High-risk search implementation needs validation
 - Complex URL state management
 
 **Schedule Risk**: **MEDIUM**
+
 - MVP timeline (13-18 days) is realistic IF prototyping is done first
 - Risk of delays in Milestone 1 if search doesn't perform as expected
 - Milestone 3 has N+1 query concern that could cause optimization work
 
 **Recommendation**:
+
 1. **Add 2 days for prototyping** before Milestone 1
 2. **Add 1 day buffer** to each milestone for unexpected issues
 3. **Total adjusted MVP timeline**: 18-25 days (up from 13-18)
@@ -1681,12 +1840,14 @@ export const getOrCreateProfile = mutation({
 ### Overall Spec Quality
 
 **Strengths**:
+
 - ✅ Comprehensive feature breakdown with clear acceptance criteria
 - ✅ Well-defined user flows and use cases
 - ✅ Realistic milestone structure
 - ✅ Good consideration of UX details
 
 **Weaknesses**:
+
 - ❌ Multiple critical schema type errors
 - ❌ Overly optimistic about search implementation complexity
 - ❌ Missing backend function specifications
@@ -1695,11 +1856,13 @@ export const getOrCreateProfile = mutation({
 ### Readiness for Implementation
 
 **Current State**: **NOT READY**
+
 - Critical schema issues must be fixed first
 - Search approach needs validation
 - Missing function signatures
 
 **After Fixes**: **READY** (with caveats)
+
 - Schema corrected
 - Prototyping completed
 - Function signatures documented
@@ -1708,6 +1871,7 @@ export const getOrCreateProfile = mutation({
 ### Estimated Time to Fix
 
 **Specification Updates**: 4-6 hours
+
 - Fix schema definitions: 1 hour
 - Add function signatures: 2 hours
 - Document patterns: 1-2 hours
@@ -1720,12 +1884,14 @@ export const getOrCreateProfile = mutation({
 ### Recommendation
 
 **DO NOT START IMPLEMENTATION** until:
+
 1. ✅ Schema issues are fixed in specification
 2. ✅ Search performance is validated through prototype
 3. ✅ Backend function signatures are documented
 4. ✅ Pagination pattern is defined
 
 **THEN PROCEED** with confidence that:
+
 - Technical foundation is solid
 - Major risks are understood and mitigated
 - Implementation can follow the spec with minimal surprises
@@ -1738,9 +1904,9 @@ export const getOrCreateProfile = mutation({
 
 ```typescript
 // convex/schema.ts
-import { defineSchema, defineTable } from "convex/server";
-import { authTables } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { defineSchema, defineTable } from 'convex/server'
+import { authTables } from '@convex-dev/auth/server'
+import { v } from 'convex/values'
 
 export default defineSchema({
   ...authTables,
@@ -1763,18 +1929,20 @@ export default defineSchema({
     charisma: v.number(),
     alignment: v.string(), // "L", "N", or "C"
     level: v.number(), // 1-10
-    traits: v.array(v.object({
-      name: v.string(),
-      description: v.string(),
-    })),
+    traits: v.array(
+      v.object({
+        name: v.string(),
+        description: v.string(),
+      }),
+    ),
   })
-    .index("by_slug", ["slug"]) // Primary lookup for detail pages
-    .index("by_level", ["level"]) // Single-dimension filter
-    .index("by_alignment", ["alignment"]) // Single-dimension filter
-    .index("by_level_and_alignment", ["level", "alignment"]) // Combined filter
-    .searchIndex("search_monsters", {
-      searchField: "name",
-      filterFields: ["level", "alignment"]
+    .index('by_slug', ['slug']) // Primary lookup for detail pages
+    .index('by_level', ['level']) // Single-dimension filter
+    .index('by_alignment', ['alignment']) // Single-dimension filter
+    .index('by_level_and_alignment', ['level', 'alignment']) // Combined filter
+    .searchIndex('search_monsters', {
+      searchField: 'name',
+      filterFields: ['level', 'alignment'],
     }),
 
   spells: defineTable({
@@ -1789,74 +1957,71 @@ export default defineSchema({
     range: v.string(), // e.g., "Self", "Close", "Near", "Far", "Unlimited"
     tier: v.number(), // 1-5 (stored as number for easier range queries)
   })
-    .index("by_slug", ["slug"]) // Primary lookup
-    .index("by_tier", ["tier"]) // Tier filtering
-    .index("by_tier_and_wizard", ["tier", "isWizardSpell"]) // Wizard spells by tier
-    .index("by_tier_and_priest", ["tier", "isPriestSpell"]) // Priest spells by tier
-    .index("by_range", ["range"]) // Range filtering
-    .searchIndex("search_spells", {
-      searchField: "name",
-      filterFields: ["tier", "isWizardSpell", "isPriestSpell", "range"]
+    .index('by_slug', ['slug']) // Primary lookup
+    .index('by_tier', ['tier']) // Tier filtering
+    .index('by_tier_and_wizard', ['tier', 'isWizardSpell']) // Wizard spells by tier
+    .index('by_tier_and_priest', ['tier', 'isPriestSpell']) // Priest spells by tier
+    .index('by_range', ['range']) // Range filtering
+    .searchIndex('search_spells', {
+      searchField: 'name',
+      filterFields: ['tier', 'isWizardSpell', 'isPriestSpell', 'range'],
     }),
 
   favorites: defineTable({
-    userId: v.id("users"),
-    itemType: v.union(v.literal("monster"), v.literal("spell")),
+    userId: v.id('users'),
+    itemType: v.union(v.literal('monster'), v.literal('spell')),
     itemSlug: v.string(), // Reference by slug (more stable than ID)
     itemName: v.string(), // Denormalized for display without join
     notes: v.optional(v.string()), // User's personal notes
     // Use _creationTime system field instead of addedAt
   })
-    .index("by_userId", ["userId"]) // All user favorites
-    .index("by_userId_and_type", ["userId", "itemType"]) // Filtered by type
-    .index("by_userId_and_itemSlug", ["userId", "itemSlug"]), // Duplicate check
+    .index('by_userId', ['userId']) // All user favorites
+    .index('by_userId_and_type', ['userId', 'itemType']) // Filtered by type
+    .index('by_userId_and_itemSlug', ['userId', 'itemSlug']), // Duplicate check
 
   userProfiles: defineTable({
-    userId: v.id("users"), // From Convex Auth
+    userId: v.id('users'), // From Convex Auth
     displayName: v.string(),
     avatarUrl: v.optional(v.string()),
     // Specific preference fields instead of v.any()
-    themePreference: v.optional(v.union(
-      v.literal("light"),
-      v.literal("dark"),
-      v.literal("system")
-    )),
-    viewModePreference: v.optional(v.union(
-      v.literal("grid"),
-      v.literal("list")
-    )),
-  }).index("by_userId", ["userId"]),
+    themePreference: v.optional(
+      v.union(v.literal('light'), v.literal('dark'), v.literal('system')),
+    ),
+    viewModePreference: v.optional(
+      v.union(v.literal('grid'), v.literal('list')),
+    ),
+  }).index('by_userId', ['userId']),
 
   // Phase 2 schemas (Milestone 5)
   collections: defineTable({
-    userId: v.id("users"),
+    userId: v.id('users'),
     name: v.string(),
     description: v.optional(v.string()),
     updatedAt: v.number(), // Last modification time
     isPublic: v.boolean(),
     // Use _creationTime for creation timestamp
   })
-    .index("by_userId", ["userId"])
-    .index("by_public", ["isPublic"]), // For browsing public collections
+    .index('by_userId', ['userId'])
+    .index('by_public', ['isPublic']), // For browsing public collections
 
   collectionItems: defineTable({
-    collectionId: v.id("collections"),
-    itemType: v.union(v.literal("monster"), v.literal("spell")),
+    collectionId: v.id('collections'),
+    itemType: v.union(v.literal('monster'), v.literal('spell')),
     itemSlug: v.string(),
     itemName: v.string(), // Denormalized
     order: v.number(), // Use floats for easy reordering (1.0, 1.5, 2.0)
     // Use _creationTime for added timestamp
-  }).index("by_collectionId", ["collectionId"]),
+  }).index('by_collectionId', ['collectionId']),
 
   recentViews: defineTable({
-    userId: v.id("users"),
-    itemType: v.union(v.literal("monster"), v.literal("spell")),
+    userId: v.id('users'),
+    itemType: v.union(v.literal('monster'), v.literal('spell')),
     itemSlug: v.string(),
     viewedAt: v.number(), // Timestamp, updated on each view
   })
-    .index("by_userId", ["userId"])
-    .index("by_userId_and_itemSlug", ["userId", "itemSlug"]), // Find existing view
-});
+    .index('by_userId', ['userId'])
+    .index('by_userId_and_itemSlug', ['userId', 'itemSlug']), // Find existing view
+})
 ```
 
 ---
@@ -1864,16 +2029,19 @@ export default defineSchema({
 ## Appendix B: Reference Links
 
 ### Convex Documentation
+
 - [Search Indexes](https://docs.convex.dev/search)
 - [Pagination](https://docs.convex.dev/database/pagination)
 - [Validators](https://docs.convex.dev/functions/validation)
 - [Indexes](https://docs.convex.dev/database/indexes/)
 
 ### TanStack Documentation
+
 - [TanStack Router Search Params](https://tanstack.com/router/latest/docs/framework/react/guide/search-params)
 - [TanStack Query with Convex](https://www.convex.dev/development/tanstack-query)
 
 ### Best Practices
+
 - React 19 Best Practices
 - TypeScript Strict Mode Guidelines
 - Accessibility (WCAG AA)

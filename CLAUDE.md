@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 This is a Shadowdark GM Tools application built with:
+
 - **Frontend**: TanStack Start (file-based routing), React 19, TailwindCSS 4
 - **Backend**: Convex (real-time database and backend functions)
 - **Build Tool**: Vite
@@ -14,12 +15,15 @@ The application provides game master tools for the Shadowdark RPG system.
 ## Development Commands
 
 ### Starting Development
+
 ```bash
 npm run dev
 ```
+
 This command runs Convex dev server once, then starts both web and Convex dev servers concurrently.
 
 ### Individual Dev Servers
+
 ```bash
 npm run dev:web      # Start Vite dev server only (port 3000)
 npm run dev:convex   # Start Convex dev server only
@@ -27,11 +31,13 @@ npm run dev:ts       # Start TypeScript watch mode
 ```
 
 ### Build
+
 ```bash
 npm run build        # Build for production and type-check
 ```
 
 ### Formatting
+
 ```bash
 npm run format       # Format code with Prettier
 ```
@@ -41,6 +47,7 @@ npm run format       # Format code with Prettier
 ### Frontend Architecture
 
 **Router Configuration** (`src/router.tsx`)
+
 - Uses TanStack Router with React Query integration
 - Convex integration via `ConvexQueryClient` and `@convex-dev/react-query`
 - Routes are file-based in `src/routes/` directory
@@ -48,15 +55,19 @@ npm run format       # Format code with Prettier
 - Requires `VITE_CONVEX_URL` environment variable in `.env.local`
 
 **Route Structure**
+
 - `src/routes/__root.tsx`: Root layout component with head metadata
 - `src/routes/index.tsx`: Home page route
 - `src/routes/anotherPage.tsx`: Additional page route
 
 **Data Fetching Pattern**
 The app uses a hybrid approach combining Convex React hooks and TanStack Query:
+
 ```tsx
 // Query data
-const { data } = useSuspenseQuery(convexQuery(api.myFunctions.listNumbers, { count: 10 }))
+const { data } = useSuspenseQuery(
+  convexQuery(api.myFunctions.listNumbers, { count: 10 }),
+)
 
 // Mutate data
 const addNumber = useMutation(api.myFunctions.addNumber)
@@ -65,6 +76,7 @@ const addNumber = useMutation(api.myFunctions.addNumber)
 ### Backend Architecture (Convex)
 
 **Function Organization**
+
 - Convex functions are in `convex/` directory
 - Uses file-based routing: `api.fileName.functionName` or `internal.fileName.functionName`
 - Schema defined in `convex/schema.ts`
@@ -72,6 +84,7 @@ const addNumber = useMutation(api.myFunctions.addNumber)
 
 **Function Syntax**
 Always use the modern function syntax with validators:
+
 ```typescript
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
@@ -86,6 +99,7 @@ export const myQuery = query({
 ```
 
 **Important Convex Patterns**
+
 - Use `internalQuery`, `internalMutation`, `internalAction` for private functions
 - Use `query`, `mutation`, `action` for public API functions
 - Always include `args` and `returns` validators
@@ -96,10 +110,12 @@ export const myQuery = query({
 ### Type System
 
 **Path Aliases**
+
 - `~/*` maps to `src/*` (configured in tsconfig.json and vite.config.ts)
 - Import Convex generated types from `convex/_generated/dataModel`
 
 **TypeScript Configuration**
+
 - Strict mode enabled
 - Uses bundler module resolution
 - Allows importing `.ts` extensions
@@ -119,6 +135,7 @@ The project follows Convex best practices defined in `.cursor/rules/convex_rules
 ## Environment Setup
 
 Create a `.env.local` file with:
+
 ```
 VITE_CONVEX_URL=https://your-deployment.convex.cloud
 ```
@@ -126,11 +143,13 @@ VITE_CONVEX_URL=https://your-deployment.convex.cloud
 ## Testing the Build
 
 After making changes, always run:
+
 ```bash
 npm run build
 ```
+
 This builds the app and runs TypeScript type checking to catch errors.
 
-
 ## New Features
-When creating the and planning new features create a new file with the name <featre>_plan.md under /context/plans/ and ensure that file can clear steps for how you entend to implement this new feature. 
+
+When creating the and planning new features create a new file with the name <featre>\_plan.md under /context/plans/ and ensure that file can clear steps for how you entend to implement this new feature.
