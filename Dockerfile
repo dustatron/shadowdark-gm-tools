@@ -5,10 +5,14 @@ FROM node:22-slim AS builder
 # Set the working directory
 WORKDIR /app
 
-# Accept CONVEX_URL as a build argument and set it as an environment variable
-# This is required for the `npm run build` command to succeed
+# Accept build arguments and set them as environment variables
+# These are required for the `npm run build` command to succeed
 ARG CONVEX_URL
+ARG VITE_CONVEX_URL
+ARG CONVEX_DEPLOY_KEY
 ENV CONVEX_URL=$CONVEX_URL
+ENV VITE_CONVEX_URL=$VITE_CONVEX_URL
+ENV CONVEX_DEPLOY_KEY=$CONVEX_DEPLOY_KEY
 
 # Copy package files and install dependencies
 COPY package*.json ./
@@ -17,7 +21,12 @@ RUN npm install
 # Copy the rest of the application source code
 COPY . .
 
+# Generate Convex client files before building
+# This requires the CONVEX_DEPLOY_KEY to be set
+RUN npx convex dev --once
+
 # Run the build script
+# This should now succeed with the required env vars and generated files
 RUN npm run build
 
 # ---- Runner Stage ----
