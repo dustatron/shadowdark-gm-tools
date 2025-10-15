@@ -4,24 +4,46 @@
 
 # Dependencies
 node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
 
 # Build artifacts
 dist
+.output
+.vite
+.turbo
+.convex
 
-# Environment variables
+# Environment variables (keep example files)
 .env*
 !example.env.local
 
 # Docker
 Dockerfile
 .dockerignore
+docker-compose.yml
 
 # IDE and OS files
 .vscode/
 .idea/
 .DS_Store
+*.swp
+*.swo
+*~
+Thumbs.db
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Testing
+coverage
+.nyc_output
+
+# Documentation (except README)
+*.md
+!README.md
+
+# Misc
+.editorconfig
+.prettierrc*
+.eslintrc*
+tsconfig.tsbuildinfo
