@@ -53,6 +53,7 @@ This tells Convex where to redirect users AFTER it processes the OAuth:
 ✅ Fixed `.env.local` - removed incorrect `CONVEX_SITE_URL`
 ✅ Set Convex `SITE_URL` to `http://localhost:3000` for local testing
 ✅ Updated `auth.config.ts` to remove incorrect configuration
+✅ Generated and set `JWT_PRIVATE_KEY` and `JWKS` in Convex environment
 
 ## What You Need to Do
 
@@ -95,6 +96,28 @@ npx convex env set SITE_URL https://shadowdark.dustatron.com
 ```
 
 The OAuth callback URLs in Discord/Google never need to change - they always point to Convex.
+
+## JWT Keys (REQUIRED)
+
+Convex Auth requires JWT keys for signing authentication tokens. These have been generated and set:
+
+```bash
+# These are already set in your Convex deployment:
+npx convex env list | grep JWT
+```
+
+If you ever need to regenerate them:
+
+```bash
+# Generate new keys
+node -e "import('jose').then(jose => jose.generateKeyPair('RS256').then(async ({ privateKey, publicKey }) => { const jwk = await jose.exportJWK(privateKey); const pubJwk = await jose.exportJWK(publicKey); const jwks = { keys: [{ ...pubJwk, use: 'sig', alg: 'RS256', kid: 'convex' }] }; console.log('JWT_PRIVATE_KEY=' + JSON.stringify(jwk)); console.log('JWKS=' + JSON.stringify(jwks)); }))"
+
+# Then set them in Convex:
+npx convex env set JWT_PRIVATE_KEY '<paste-jwt-private-key-json>'
+npx convex env set JWKS '<paste-jwks-json>'
+```
+
+**⚠️ IMPORTANT**: Never commit JWT keys to version control!
 
 ## Troubleshooting
 

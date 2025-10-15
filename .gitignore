@@ -27,3 +27,5 @@ app.config.timestamp_*.js
 
 # Claude Code local settings
 .claude/settings.local.json
+
+JWT_KEYS.txt

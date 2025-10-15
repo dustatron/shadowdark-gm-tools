@@ -35,7 +35,7 @@ export function NavbarLinks({
         const isActive = currentPath.startsWith(link.to)
 
         return (
-          <Button variant={isActive ? 'ghost' : 'outline'}>
+          <Button variant={isActive ? 'ghost' : 'outline'} key={link.label}>
             <Link
               key={link.to}
               to={link.to}
