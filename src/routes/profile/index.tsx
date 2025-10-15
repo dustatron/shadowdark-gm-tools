@@ -14,7 +14,7 @@ function ProfilePage() {
   const { data: profile } = useSuspenseQuery(
     convexQuery(api.userProfiles.getCurrentUserProfile, {}),
   )
-
+  console.log('user', profile)
   return (
     <>
       <Unauthenticated>
