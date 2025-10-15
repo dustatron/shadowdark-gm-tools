@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { convexQuery } from '@convex-dev/react-query'
-import { Authenticated, Unauthenticated } from 'convex/react'
+import { Authenticated, Unauthenticated, useConvexAuth } from 'convex/react'
 import { LogOut, User, Heart } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
@@ -83,6 +83,10 @@ function AuthenticatedMenu() {
 }
 
 export function UserProfileMenu() {
+  const { isLoading, isAuthenticated } = useConvexAuth()
+
+  console.log('[UserProfileMenu] Auth state:', { isLoading, isAuthenticated })
+
   return (
     <>
       <Unauthenticated>
